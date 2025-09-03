@@ -1,0 +1,586 @@
+---
+title: "Overview of Probability Theory"
+execute:
+  echo: true
+  warning: false
+  message: false
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction
+
+- Today we will review very basic probability rules to help us build towards analysis under the Bayeisan framework.
+
+- We will discuss
+    - Basic terminology
+    - Basic properties
+    - Types of probabilities
+    - Types of events
+
+## Terminology for Probability
+
+- <u>Experiment</u>: A process that results in one and only one of many possible observations.
+
+- <u>Simple outcomes</u>: The possible results of our experiment.
+
+- <u>Sample space</u>: Collection of possible outcomes of the experiment.
+
+- <u>Event</u>:  A collection of one or more of the outcomes of the experiment.
+
+- Example: rolling a die once.
+    - Outcome: the result of the die.
+    - Sample space: {1, 2, 3, 4, 5, 6}
+    - Events: rolling an odd; rolling a multiple of 3; rolling a 3 or better.
+
+## Properties of Probability
+
+- There are two properties of probability that we must keep at the forefront of our mind.
+
+- First, probability always falls between 0 and 1. Mathematically,
+
+$$0 \le P[E_i] \le 1$$
+
+- What does $p=0$ imply?<br><br>
+- What does $p=0.5$ imply?<br><br>
+- What does $p=1$ imply?
+
+## Properties of Probability
+
+- There are two properties of probability that we must keep at the forefront of our mind.
+
+- Second, the sum of all simple events for an experiment is always 1. Mathematically,
+
+$$\sum_{i=1}^n P[E_i] = P[E_1] + ... + P[E_n] = 1$$
+
+- If there are 2 events and we know $P[E_1]=0.7$, what is $P[E_2]$? <br><br><br>
+
+- If there are 4 events and we know $P[E_1]=P[E_2]=0.1$, $P[E_3]=0.6$, what is $P[E_4]$?
+
+## Assigning Probabilities
+
+- How do we assign probabilities?
+    - Subjective probability
+    - Classicial probability rule
+    - Relative frequency
+
+## Subjective Probability
+
+- Subjective probability is the probability assigned to an event based on subjective judgement, experience, information, and belief.
+
+- Examples:
+    - P[UWF wins national championship]
+    - P[tomato plant eaten by hornworms]
+    - P[A in this course]
+
+## Classical Probability
+
+- Let $A$ be an event for an experiment with equally likely outcomes,
+
+$$P[A] = \frac{\text{Number of outcomes favorable to $A$}}{\text{Total number of outcomes for the experiment}}$$
+
+- Examples:
+    - P[2 heads on 3 coin tosses]
+    - P[at least 2 heads on 4 coin tosses]
+    - P[even when rolling die]
+
+## Relative Frequency
+
+- If an experiment is repeated $n$ times and an event $A$ is observed $f$ times, then 
+
+$$P[A] = \frac{f}{n} = \frac{\text{Frequency of $A$}}{\text{Sample size}}$$
+
+- Example:
+    - P[car is a lemon] given 10/500 sampled cars from a factory are lemons.
+    - P[person is a homeowner] given 730/1000 sampled individuals own a home.
+
+## Contingency Tables
+
+- Suppose 100 employees at Target were asked whether they are in favor of or against extending store hours during the holiday season. 
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center>
+
+## Marginal Probability
+
+- A marginal probability is the probability of a single event occurring without considering any other variables. 
+    - In a contingency table, marginal probabilities are found outside the body of the table.
+
+- It tells us the likelihood of one category happening overall, regardless of how it combines (or interacts) with other categories.
+    
+- In our Target example:
+    - What is the probability that a randomly selected employee is in favor?
+    - What is the probability that randomly selected employee works in the Grocery department?
+
+## Marginal Probability   
+
+- Recall,
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center>    
+
+- What is the probability that a randomly selected employee is in favor?
+
+- What is the probability that randomly selected employee works in the Grocery department?
+
+## Joint Probability 
+
+- The joint probability is the probability that two events happen at the same time. 
+    - In a contingency table, joint probabilities are found inside the body of the table.
+
+- It tells us the likelihood that a randomly selected observation falls into both categories simultaneously.
+
+- In our Target example:
+    - What is the probability that an employee is in the Grocery department and in favor of extended hours?
+    - What is the probability that an employee is in Electronics and against extended hours?
+
+## Joint Probability  
+
+- Recall,
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center> 
+
+- What is the probability that an employee is in the Grocery department and in favor of extended hours?
+
+- What is the probability that an employee is in Electronics and against extended hours?
+
+## Conditional Probability 
+
+- Conditional probability is the probability that one event occurs given that we already know another event has occurred.
+    - "What is the probability of Event A if we know Event B is true?"
+    - In a contingency table, conditional probabilities are found by limiting yourself to a specific row or column of the table, then finding the corresponding probability.
+
+- In our Target example,
+    - What is the probability that an employee is in favor of extended hours given that they work in the Grocery department?
+    - What is the probability that an employee works in the Electronics department given that they are against extended hours?
+
+
+## Conditional Probability 
+
+- Recall,
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center> 
+
+- What is the probability that an employee is in favor of extended hours given that they work in the Grocery department?
+
+- What is the probability that an employee works in the Electronics department given that they are against extended hours?
+
+## Mutually Exclusive Events
+
+- Events that cannot occur together are mutually exclusive or disjoint.
+
+- Consider rolling a single die:
+    - A = an even number = {2, 4, 6}
+    - B = an odd number = {1, 3, 5}
+    - C = a number less than 5 = {1, 2, 3, 4}
+
+- Are events A and B mutually exclusive?
+
+- Are events A and C mutually exclusive?
+
+## Mutually Exclusive Events
+
+- Consider rolling a single die:
+    - A = an even number = {2, 4, 6}
+    - B = an odd number = {1, 3, 5}
+    - C = a number less than 5 = {1, 2, 3, 4}
+
+- Are events A and B mutually exclusive?
+
+<center><img src="images/L01b.png" alt="Venn diagram of events A and B" width="40%"></center>
+
+
+## Mutually Exclusive Events
+
+- Consider rolling a single die:
+    - A = an even number = {2, 4, 6}
+    - B = an odd number = {1, 3, 5}
+    - C = a number less than 5 = {1, 2, 3, 4}
+
+- Are events A and C mutually exclusive?
+
+<center><img src="images/L01a.png" alt="Venn diagram of events A and C" width="40%"></center>
+
+## Independent Events
+
+- Two events are said to be independent if the occurrence of one event does not affect the probability of the occurrence of the other event. 
+
+- Mathematically,
+
+$$ P[A|B] = P[A] \text{ or } P[B|A] = P[B]$$
+
+- In our Target example, is department independent of being in favor of extended hours?
+    - We are being asked to examine P[department|favor] or P[favor|department].
+    
+## Independent Events
+
+- Recall,
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center> 
+
+- We need to examine P[department|favor] or P[favor|department]. We say that they are independent if
+    - P[department|favor] = P[department]
+    - P[favor|department] = P[favor]
+    
+## Complementary Events   
+
+- The complement of A is the event that includes all the outcomes that are not in A.
+
+<center><img src="images/L01c.png" alt="Venn diagram of events A and A-complement" width="30%"></center>
+
+- Mathematically,
+
+$$
+\begin{align*}
+P[A] &+ P[A^c] = 1 \\
+P[A] &= 1 - P[A^c] \\
+P[A^c] &= 1 - P[A] 
+\end{align*}
+$$
+
+## Complementary Events
+
+- Recall,
+
+<center>
+
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;margin:0px auto;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:42px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-7btt{border-color:inherit;font-weight:bold;text-align:center;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+@media screen and (max-width: 767px) {.tg {width: auto !important;}.tg col {width: auto !important;}.tg-wrap {overflow-x: auto;-webkit-overflow-scrolling: touch;margin: auto 0px;}}</style>
+<div class="tg-wrap"><table class="tg"><tbody>
+  <tr>
+    <td class="tg-7btt">Department</td>
+    <td class="tg-7btt">In Favor</td>
+    <td class="tg-7btt">Against</td>
+    <td class="tg-7btt">Total</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Electronics</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">8</td>
+    <td class="tg-dvpl">20</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Clothing</td>
+    <td class="tg-dvpl">18</td>
+    <td class="tg-dvpl">12</td>
+    <td class="tg-dvpl">30</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Grocery</td>
+    <td class="tg-dvpl">25</td>
+    <td class="tg-dvpl">15</td>
+    <td class="tg-dvpl">40</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Customer Service</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">5</td>
+    <td class="tg-dvpl">10</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky"><b>Total<b></td>
+    <td class="tg-dvpl">60</td>
+    <td class="tg-dvpl">40</td>
+    <td class="tg-dvpl">100</td>
+  </tr>
+</tbody>
+</table></div>
+
+</center> 
+
+- Find P[Electronics^c^].
+- Find P[Electronics^c^ | Against].
+
+## Wrap Up
+
+- Today we have reviewed probability basics.
+    - Note that this is no replacement for Advanced Probability :)
+    
+- We just need to understand general concepts to move foward.
+
+- Next week:
+    - Monday: <u>no class meeting</u> -- instead, you will meet with your EES collaborator (at an agreed upon time/date).
+        - Pairing document with contact information is linked on Discord. We now have a "EES project" channel.
+    - Wednesday: probability distributions
+
+
+
