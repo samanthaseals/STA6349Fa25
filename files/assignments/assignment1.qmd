@@ -1,0 +1,229 @@
+---
+title: "Assignment 1: Probability Distributions"
+author: "Your Name Here"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  html:
+    df-print: paged
+    self-contained: true
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+*Note: do not read too much into the following situations. The purpose is to get comfortable identifying distributions and finding corresponding probabilities.*
+
+**Situation 1: Walter is known for his intense personality during bowling league nights. Whether it's a foot foul, a scoring dispute, or just general frustration with life, he frequently loses his temper and yells loudly at his teammates or opponents. Based on observations over several league nights, it has been determined that Walter loses his temper at an average rate of 4 outbursts per hour. His outbursts are unpredictable and can happen at any point during the game, but they seem to occur independently of each other.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution?**
+
+Replace with your answer
+
+**d. What is the probability that Walter will not have an outburst at all?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that Walter has more than 10 outbursts during league night?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+
+
+
+
+
+
+**Scenario 2: Donny often struggles to find parking near the bowling alley, especially on busy league nights. Sometimes he gets lucky and finds a spot fairly quickly, but other times he ends up circling the block several times before he can finally park. His parking times are generally right-skewed as it is much more common for it to take a shorter amount of time... but every now and then it can take quite a while. Over time, his friends have noticed a pattern: it usually takes him a few minutes, but there is a decent chance it could take significantly longer.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution? (Hint: for this situation, they are 3 and 4 (in that order)).**
+
+Replace with your answer
+
+**d. What is the probability that Donny will take more than 15 minutes to find a spot?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that Donny will find a parking space quickly -- i.e., that he parks within 5 minutes of arriving?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+
+
+
+
+
+
+
+
+
+**Situation 3: Maude is famous for her avant-garde dance performances that leave audiences both puzzled and mesmerized. Her performances at the local art venue are known for their spontaneity and lack of strict timing. Observers have noted that the duration of her performances can last anywhere between 15 and 30 minutes, with any length within this interval being equally likely. There's no predicting exactly how long Maude will choose to perform on any given night... sometimes it's a brief expression and sometimes it stretches to the edge of the audience’s patience.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution?**
+
+Replace with your answer
+
+**d. What is the probability that Maude's performance will be on the shorter end -- i.e., it lasts somewhere between 15 and 16 minutes?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that Maude's performance will be on the longer end -- i.e., it lasts somewhere between 25 and 30 minutes?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+
+
+
+
+**Scenario 4. The Dude always orders a White Russian when he's at the bowling alley. However, the bowling alley bar is not always well-stocked. Each time The Dude places an order, there is only a 60% chance that the bartender has all the necessary ingredients on hand to make the drink (they are frequently out of cream). Throughout one particularly long evening of bowling and philosophical debates, The Dude orders 8 White Russians. He hopes that most of them will be successfully made.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution?**
+
+Replace with your answer
+
+**d. What is the probability that at least 5 drinks will be successfully made?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that all 8 drinks are successfully made?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+
+
+
+
+
+**Scenario 5: The Dude's bowling games tend to last around 45 minutes, give or take. While the exact length can vary from game to game, it’s rare for his games to be extremely short or unusually long. Most of the time, his game lengths cluster fairly tightly around that 45-minute mark, though occasionally he'll have a quicker match or one that drags on a little longer if the vibe calls for it, to the tune of $\pm$ 5 minutes.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution?**
+
+Replace with your answer
+
+**d. What is the probability that the game will last exactly 45 minutes?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that the game will really drag on -- that it lasts somewhere between 50 and 60 minutes?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+
+
+
+
+
+**Scenario 6: After many laid-back bowling sessions (and several White Russians), The Dude has started keeping track of how often he lands a strike. He knows he’s not perfect, but he’s developed a pretty good feel for his overall strike success rate. It seems like his strike percentage tends to hang out somewhere between 60% and 80% most nights, though there’s still some uncertainty. Sometimes he's on fire, sometimes he's a little off, but overall he’s confident his long-term strike rate leans more toward success than failure.**
+
+**a. What is the random variable of interest? (What is being measured?)**
+
+Replace with your answer
+
+**b. What distribution is appropriate and why?**
+
+Replace with your answer
+
+**c. What are the parameters of the distribution? (Hint: for this example, they are 7 and 3 (in that order)).**
+
+Replace with your answer
+
+**d. What is the probability that The Dude's strike success rate is less than 50%?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
+
+**e. What is the probability that The Dude's strike success rate is above 80%?**
+
+```{r}
+
+```
+
+Replace with your answer (i.e., don't just show me R output here :))
