@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/schedule.html</loc>
-    <lastmod>2025-09-10T20:31:52.486Z</lastmod>
+    <lastmod>2025-09-17T19:12:08.404Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/01-1-probability-theory.html</loc>
     <lastmod>2025-09-03T14:59:36.820Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/04-2-thinking-bayesian.html</loc>
+    <lastmod>2025-09-17T16:43:24.657Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/assignments/assignment1.html</loc>
@@ -18,7 +22,11 @@
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/03-2-probability-distributions.html</loc>
-    <lastmod>2025-09-10T20:34:10.755Z</lastmod>
+    <lastmod>2025-09-17T16:35:30.890Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/Untitled.html</loc>
+    <lastmod>2025-09-17T16:35:24.286Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/syllabus.html</loc>
