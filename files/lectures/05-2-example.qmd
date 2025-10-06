@@ -1,0 +1,122 @@
+---
+title: "Mario Kart Analysis"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  html:
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Example: Mario Kart
+
+- In Mario Kart 8 Deluxe, item boxes give different items depending on race position. To reduce the "position bias," only item boxes opened while the racer was in mid-pack (positions 4–10) were recorded. 
+
+- You want to estimate the probability that an item box yields a Red Shell. When playing the Special Cup, only 31 red shells were seen in 114 boxes opened by mid-pack racers.
+
+- Find the posterior distribution under two priors:
+    1. Flat/uninformative prior, Beta(1,1).
+    2. Beta($\alpha$, $\beta$) of your choosing.
+
+*Find the posterior under the flat prior, Beta(1,1).*
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+```
+
+```{r, fig.align="center"}
+plot_beta_binomial(alpha = 1, beta = 1,
+                   y = 31, n = 114) +
+  theme_bw()
+```
+
+*Find the posterior under a prior of your choosing.*
+
+```{r, fig.align="center"}
+plot_beta_binomial(alpha = 8, beta = 4,
+                   y = 31, n = 114) +
+  theme_bw()
+
+plot_beta_binomial(alpha = 23, beta = 57,
+                   y = 31, n = 114) +
+  theme_bw()
+```
+
+
+- Suppose that we know the individual data points for the Special Cup:
+    - Cloudtop Cruise, of 28 boxes, 6 had a red shell.
+    - Bone-Dry Dunes, of 27 boxes, 8 had a red shell.
+    - Bowser's Castle, of 29 boxes, 12 had a red shell.
+    - Rainbow Road, of 30 boxes, 5 had a red shell.
+
+- Prove sequentiality to yourself.
+
+    - Analyze the data race-by-race in this order: Cloudtop Cruise, Bone-Dry Dunes, Bowser's Castle, and Rainbow Road.
+    
+    - Analyze the data race-by-race in this order: Rainbow Road, Bowser's Castle, Cloudtop Cruise, and Bone-Dry Dunes.
+    
+*Analyze the data race-by-race in this order: Cloudtop Cruise, Bone-Dry Dunes, Bowser's Castle, and Rainbow Road.*
+
+```{r}
+summarize_beta_binomial(alpha = 1, beta = 1,
+                        y = 6+8+12+5, n = 28+27+29+30) # overall
+
+
+summarize_beta_binomial(alpha = 1, beta = 1,
+                        y = 6, n = 28) # cloudtop cruise
+summarize_beta_binomial(alpha = 7, beta = 23,
+                        y = 8, n = 27) # bone-dry dunes
+summarize_beta_binomial(alpha = 15, beta = 42,
+                        y = 12, n = 29) # bowser's castle
+summarize_beta_binomial(alpha = 27, beta = 59,
+                        y = 5, n = 30) # bowser's castle
+```
+
+Final distribution is Beta(32, 84).
+
+```{r}
+summarize_beta_binomial(alpha = 27, beta = 59,
+                        y = 5, n = 30) # rainbow road
+```
+
+Final distribution is Beta(32, 84).
+
+*Analyze the data race-by-race in this order: Rainbow Road, Bowser's Castle, Cloudtop Cruise, and Bone-Dry Dunes.*
+
+In order:
+
+```{r}
+summarize_beta_binomial(alpha = 1, beta = 1,
+                        y = 5, n = 30) # rainbow road
+summarize_beta_binomial(alpha = 6, beta = 26,
+                        y = 12, n = 29) # bowser's castle
+summarize_beta_binomial(alpha = 18, beta = 43,
+                        y = 6, n = 28) # cloudtop cruise
+summarize_beta_binomial(alpha = 24, beta = 65,
+                        y = 8, n = 27) # bone-dry dunes
+```
+
+Final distribution is Beta(32, 84).
+
+All together: 
+
+```{r}
+summarize_beta_binomial(alpha = 1, beta = 1,
+                        y = 5+12+6+8, n = 30+29+28+27)
+```
+
+Final distribution is Beta(32, 84).

@@ -1,0 +1,421 @@
+---
+title: "Gamma-Poisson Model"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction: Gamma-Poisson Model
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+library(ggpubr)
+```
+
+- Recall the Beta-Binomial model,
+    - $y \sim \text{Bin}(n, \pi)$ (data distribution)
+    - $\pi \sim \text{Beta}(\alpha, \beta)$ (prior distribution)
+    - $\pi|y \sim \text{Beta}(\alpha+y, \beta+n-y)$ (posterior distribution)
+    
+- The Beta-Binomial model is from a *conjugate family* (i.e., the posterior is from the same model family as the prior).
+
+- Now, we will learn about the Gamma-Poisson, another conjugate family.
+
+## Example Set Up
+
+- Suppose we are now interested in modeling the number of spam calls we receive.
+
+    - This means that we are modeling the rate, $\lambda$.
+    
+- We take a guess and say that the value of $\lambda$ that is most likely is around 5, 
+
+    - ... but reasonably ranges between 2 and 7 calls per day.
+
+- Why can't we use the Beta distribution as our prior distribution?
+    - $\lambda$ is the mean of a count $\to$ $\lambda \in \mathbb{R}^+$ $\to$ $\lambda$ is not limited to $[0, 1]$ $\to$ broken assumption for Beta distribution.
+
+- Why can't we use the binomial distribution as our data distribution? 
+    - $Y_i$ is a count $\to$ $Y_i \in \mathbb{N}^+$ $\to$ $Y_i$ is not limited to $\{0, 1\}$ $\to$ broken assumption for Binomial distribution.
+
+## Poisson Data Model
+
+- We will use the Poisson distribution to model the number of spam calls
+
+$$Y \in \{0, 1, 2, ...\}$$
+
+- $Y$ is the number of independent events that occur in a fixed amount of time or space. 
+- $\lambda > 0$ is the rate at which these events occur.
+
+- Mathematically, 
+
+$$ Y | \lambda \sim \text{Pois}(\lambda),$$
+
+- with pmf,
+
+$$f(y|\lambda) = \frac{\lambda^y e^{-\lambda}}{y!}, \ \ \ y \in \{0,1, 2, ... \}$$
+
+## Gamma Prior
+
+- If $\lambda$ is a continuous random variable that can take on any positive value ($\lambda > 0$), then the variability may be modeled with the Gamma distribution with
+    - shape hyperparameter $s>0$
+    - rate hyperparameter $r>0$.
+    
+- Thus,
+
+$$\lambda \sim \text{Gamma}(s, r)$$
+    
+- and the Gamma pdf is given by
+
+$$f(\lambda) = \frac{r^s}{\Gamma(s)} \lambda^{s-1} e^{-r\lambda}$$
+
+## Gamma Prior: Shapes
+
+- Let's explore the shape of the Gamma:
+
+<center>
+```{r}
+plot_gamma(1, 1) + theme_bw() + ggtitle("Gamma(1, 1)")
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- Let's explore the shape of the Gamma:
+
+<center>
+```{r}
+plot_gamma(2, 1) + theme_bw() + ggtitle("Gamma(2, 1)")
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- Let's explore the shape of the Gamma:
+
+<center>
+```{r}
+plot_gamma(10, 1) + theme_bw() + ggtitle("Gamma(10, 1)")
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- Let's explore the shape of the Gamma:
+
+<center>
+```{r}
+plot_gamma(10, 10) + theme_bw() + ggtitle("Gamma(10, 10)")
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- What happens when we increase the $\alpha$ parameter?
+
+<center>
+```{r}
+#| echo: false
+ggarrange(plot_gamma(1, 1) + theme_bw() + ggtitle("Gamma(1, 1)"),
+          plot_gamma(5, 1) + theme_bw() + ggtitle("Gamma(5, 1)"),
+          plot_gamma(10, 1) + theme_bw() + ggtitle("Gamma(10, 1)"),
+          ncol = 3)
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- What happens when we increase the $\beta$ parameter?
+
+<center>
+```{r}
+#| echo: false
+ggarrange(plot_gamma(5, 1) + theme_bw() + ggtitle("Gamma(5, 1)"),
+          plot_gamma(5, 5) + theme_bw() + ggtitle("Gamma(5, 5)"),
+          plot_gamma(5, 10) + theme_bw() + ggtitle("Gamma(5, 10)"),
+          ncol = 3)
+```
+</center>
+
+## Gamma Prior: Shapes
+
+- Putting these on the same scale,
+
+<center>
+```{r}
+#| echo: false
+ggarrange(plot_gamma(1, 1) + theme_bw() + ggtitle("Gamma(1, 1)") + xlim(0, 25) + ylim(0, 2),
+          plot_gamma(5, 1) + theme_bw() + ggtitle("Gamma(5, 1)") + xlim(0, 25) + ylim(0, 2),
+          plot_gamma(10, 1) + theme_bw() + ggtitle("Gamma(10, 1)") + xlim(0, 25) + ylim(0, 2),
+          plot_gamma(5, 1) + theme_bw() + ggtitle("Gamma(5, 1)") + xlim(0, 25) + ylim(0, 2),
+          plot_gamma(5, 5) + theme_bw() + ggtitle("Gamma(5, 5)") + xlim(0, 25) + ylim(0, 2),
+          plot_gamma(5, 10) + theme_bw() + ggtitle("Gamma(5, 10)") + xlim(0, 25) + ylim(0, 2),
+          ncol = 3, nrow=2)
+```
+</center>
+
+
+## Tuning the Gamma Prior
+
+- Let's now tune our prior. 
+
+- We are assuming $\lambda \approx 5$, somewhere between 2 and 7.
+
+- We know the mean of the gamma distribution,
+
+$$E(\lambda) = \frac{s}{r} \approx 5 \to 5r \approx s$$
+
+- Your turn! Use the `plot_gamma()` function to figure out what value of $s$ and $r$ we need.
+
+## Tuning the Gamma Prior
+
+- Looking at different values:
+
+<center>    
+```{r}
+#| echo: false
+gam_graph <- tibble(x = seq(0, 25, 0.001),
+                    gam_1 = dgamma(x, 5, 1),
+                    gam_2 = dgamma(x, 10, 2),
+                    gam_3 = dgamma(x, 15, 3),
+                    gam_4 = dgamma(x, 20, 4))                    
+g1 <- ggplot(gam_graph, aes(x = x, y = gam_1)) + geom_line() + theme_bw() + labs(x = "", y = "", title = "Gamma(5, 1)") #+ ylim(0, 0.4)
+g2 <- ggplot(gam_graph, aes(x = x, y = gam_2)) + geom_line() + theme_bw() + labs(x = "", y = "", title = "Gamma(10, 2)") #+ ylim(0, 0.4)
+g3 <- ggplot(gam_graph, aes(x = x, y = gam_3)) + geom_line() + theme_bw() + labs(x = "", y = "", title = "Gamma(15, 3)") #+ ylim(0, 0.4)
+g4 <- ggplot(gam_graph, aes(x = x, y = gam_4)) + geom_line() + theme_bw() + labs(x = "", y = "", title = "Gamma(20, 4)") #+ ylim(0, 0.4)
+ggarrange(g1, g2, g3, g4, ncol = 2, nrow = 2)
+```
+</center>
+
+## Poisson Data Model
+
+- We will be taking samples from different days. 
+    - We assume that the daily number of calls may differ from day to day. On each day $i$,
+    
+$$Y_i|\lambda \sim \text{Pois}(\lambda)$$  
+
+- This has a unique pmf for each day ($i$),
+
+$$f(y_i|\lambda) = \frac{\lambda^{y_i} e^{-\lambda}}{y_i!}$$
+
+- But really, we are interested in the *joint* information in our sample of $n$ observations.
+    - The joint pmf gives us this information.
+    
+## Poisson Data Model
+
+- The joint pmf for the Poisson,
+    
+$$
+\begin{align*}
+f\left(\overset{\to}{y_i}|\lambda\right) &= \prod_{i=1}^n f(y_i|\lambda) \\ 
+&= f(y_1|\lambda) \times f(y_2|\lambda) \times ... \times f(y_n|\lambda) \\
+&= \frac{\lambda^{y_1}e^{-\lambda}}{y_1!} \times \frac{\lambda^{y_2}e^{-\lambda}}{y_2!} \times ... \times \frac{\lambda^{y_n}e^{-\lambda}}{y_n!} \\
+&= \frac{\left( \lambda^{y_1} \lambda^{y_2} \cdot \cdot \cdot \ \lambda^{y_n}  \right) \left( e^{-\lambda} e^{-\lambda} \cdot \cdot \cdot e^{-\lambda}\right)}{y_1! y_2! \cdot \cdot \cdot y_n!} \\
+&= \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i !}
+\end{align*}
+$$    
+
+## Poisson Data Model
+
+- If the joint pmf for the Poisson is
+
+$$f\left(\overset{\to}{y_i}|\lambda\right) = \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i !}$$
+
+- then the likelihood function for $\lambda > 0$ is
+
+$$
+\begin{align*}
+L\left(\lambda|\overset{\to}{y_i}\right) &= \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i !} \\
+& \propto \lambda^{\sum y_i} e^{-n\lambda}
+\end{align*}
+$$
+
+- Pease see page 102 in the textbook for full derivations.
+
+
+
+
+## Gamma-Poisson Conjugacy
+
+- Let $\lambda > 0$ be an unknown *rate* parameter and $(Y_1, Y_2, ... , Y_n)$ be an independent sample from the Poisson distribution.
+
+- The Gamma-Poisson Bayesian model is as follows:
+
+$$
+\begin{align*}
+Y_i | \lambda &\overset{ind}\sim \text{Pois}(\lambda) \\
+\lambda &\sim \text{Gamma}(s, r) \\
+\lambda | \overset{\to}y &\sim \text{Gamma}\left( s + \sum y_i, r + n \right)
+\end{align*}
+$$
+
+- The proof can be seen in section 5.2.4 of the textbook.
+
+## Gamma-Poisson Conjugacy
+
+- Suppose we use Gamma(10, 2) as the prior for $\lambda$, the daily rate of calls.
+
+- On four separate days in the second week of August (i.e., independent days), we received $\overset{\to}y = (6, 2, 2, 1)$ calls.
+
+- We will use the `plot_poisson_likelihood()` function:
+
+```{r}
+#| eval: false
+plot_poisson_likelihood(y = c(6, 2, 2, 1), lambda_upper_bound = 10)
+```
+
+- Notes:
+    - `lambda_upper_bound` limits the $x$ axis -- recall that $\lambda \in (0, \infty)$!
+    - `lambda_upper_bound`'s default value is 10.
+    
+## Gamma-Poisson Conjugacy
+
+<center>
+```{r}
+#| echo: false
+plot_poisson_likelihood(y = c(6, 2, 2, 1), lambda_upper_bound = 10) + theme_bw()
+```
+</center>
+
+- We can see that the average is around 2.75.
+
+```{r}
+mean(c(6, 2, 2, 1))
+```
+
+## Gamma-Poisson Conjugacy
+
+- We know our prior distribution is Gamma(10, 2) and the data distribution is Poi(2.75).
+
+- Thus, the posterior is as follows,
+
+$$
+\begin{align*}
+\lambda | \overset{\to}y &\sim \text{Gamma}\left( s + \sum y_i, r + n \right) \\
+&\sim \text{Gamma}\left(10 + 11, 2 + 4 \right) \\
+&\sim \text{Gamma}\left(21, 6 \right)
+\end{align*}
+$$
+
+## The Gamma Posterior Model
+
+- Looking at just the prior and the data distributions,
+
+<center>
+```{r}
+#| echo: false
+plot_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4, posterior = FALSE) + theme_bw()
+```
+</center>
+
+- The prior expects more spam calls than what we observed.
+
+## The Gamma Posterior Model
+
+- Now including the posterior,
+
+<center>
+```{r}
+#| echo: false
+plot_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4, posterior = TRUE) + theme_bw()
+```
+</center>
+
+- The shape of the posterior has a Gamma($s$, $r$) model.
+
+    - The shape and rate parameters ($s$ and $r$) have been *updated*.
+
+## The Gamma Posterior Model
+
+- The `plot_gamma_poisson()` function:
+
+```{r}
+#| eval: false
+plot_gamma_poisson(shape = prior_s, rate = prior_r, 
+                   sum_y = sum_of_obs, n = sample_size, 
+                   posterior = TRUE or FALSE) + 
+  theme_bw()
+```
+
+
+## The Gamma Posterior Model
+
+- Your turn! What is different if we had used one of the other priors?
+
+- Recall, we considered
+    - Gamma(5, 1)
+    - Gamma(10, 2)
+    - Gamma(15, 3)
+    - Gamma(20, 4)
+
+## The Gamma Posterior Model
+
+- Your turn! What is different if we had used Gamma(15, 3) as our prior?
+
+<center>
+```{r}
+#| echo: false
+ggarrange(plot_gamma_poisson(shape = 5, rate = 1, sum_y = 11, n = 4) + theme_bw() + ylim(0, 0.6) + xlim(0, 15),
+          plot_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4) + theme_bw() + ylim(0, 0.6) + xlim(0, 15),
+          plot_gamma_poisson(shape = 15, rate = 3, sum_y = 11, n = 4) + theme_bw() + ylim(0, 0.6) + xlim(0, 15),
+          plot_gamma_poisson(shape = 20, rate = 4, sum_y = 11, n = 4) + theme_bw() + ylim(0, 0.6) + xlim(0, 15),
+          ncol = 2, nrow = 2)
+```
+</center>
+
+## The Gamma Posterior Model
+
+- We can use the `summarize_gamma_poisson()` function to summarize the distribution,
+
+```{r}
+summarize_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4)
+```
+
+## Wrap Up: Gamma-Poisson Model
+
+- We have built the Gamma-Poisson model for $\lambda$, an unknown rate.
+
+$$
+\begin{equation*}
+\begin{aligned}
+Y|\lambda &\sim \text{Poi}(\lambda) \\
+\lambda &\sim \text{Gamma}(s, r) &
+\end{aligned} 
+\Rightarrow 
+\begin{aligned}
+&& \lambda | y &\sim \text{Gamma}(s + \sum y_i, r + n) \\
+\end{aligned}
+\end{equation*}
+$$
+
+- The prior model, $f(\lambda)$, is given by Gamma($s, r$).
+
+- The data model, $f(Y|\lambda)$, is given by Poi($\lambda$).
+
+- The posterior model is a Gamma distribution with updated parameters $s+\sum y_i$ and $r + n$.
+
+## Homework / Practice
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 5.3
+    - 5.5
+    - 5.6

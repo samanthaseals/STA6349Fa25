@@ -1,0 +1,383 @@
+---
+title: "Normal-Normal Model"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction: Normal-Normal Model
+
+- Before today, we have learned two conjugate families:
+    - Beta-Binomial (binary outcomes)
+        - $y \sim \text{Bin}(n, \pi)$ (data distribution)
+        - $\pi \sim \text{Beta}(\alpha, \beta)$ (prior distribution)
+        - $\pi|y \sim \text{Beta}(\alpha+y, \beta+n-y)$ (posterior distribution)
+    - Gamma-Poisson (count outcomes)
+        - $Y_i | \lambda \overset{ind}\sim \text{Pois}(\lambda)$ (data distribution) 
+        - $\lambda \sim \text{Gamma}(s, r)$ (prior distribution)
+        - $\lambda | \overset{\to}y \sim \text{Gamma}\left( s + \sum y_i, r + n \right)$ (posterior distribution)    
+        
+- Now, we will learn about another conjugate family, the Normal-Normal, for continuous outcomes.
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+library(ggpubr)
+```
+
+## Example Set Up  
+
+- As scientists learn more about brain health, the dangers of concussions are gaining greater attention.
+
+- We are interested in $\mu$, the average volume (cm^3^) of a specific part of the brain: the hippocampus. 
+
+- [Wikipedia](https://en.wikipedia.org/wiki/Hippocampus#Other_mammals) tells us that among the general population of human adults, each half of the hippocampus has volume between 3.0 and 3.5 cm^3^.
+    - Total hippocampal volume of both sides of the brain is between 6 and 7  cm^3^.
+    - Let's assume that the mean hippocampal volume among people with a history of concussions is also somewhere between 6 and 7 cm^3^.
+    
+- We will take a sample of $n=25$ participants and update our belief.
+
+## The Normal Model
+
+- Let $Y \in \mathbb{R}$ be a continuous random variable.
+    - The variability in $Y$ may be represented with a Normal model with mean parameter $\mu \in \mathbb{R}$ and standard deviation parameter $\sigma > 0$.
+    
+- The Normal model's pdf is as follows,
+
+$$f(y) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp \left\{ \frac{-(y-\mu)^2}{2\sigma^2} \right\}$$
+
+
+## The Normal Model
+
+- If we vary $\mu$,
+
+<center>        
+```{r}
+#| echo: false
+g1 <- plot_normal(-1, 1) + theme_bw() + xlim(-5, 5) + ggtitle("N(-1, 1)")
+g2 <- plot_normal(0, 1) + theme_bw() + xlim(-5, 5)+ ggtitle("N(0, 1)")
+g3 <- plot_normal(1, 1) + theme_bw() + xlim(-5, 5)+ ggtitle("N(1, 1)")
+ggarrange(g1, g2, g3, ncol=3, nrow=1)
+```
+</center>
+
+## The Normal Model
+
+- If we vary $\sigma$,
+
+<center>        
+```{r}
+#| echo: false
+g1 <- plot_normal(0, 1) + theme_bw() + xlim(-10, 10) + ylim(0, 0.4) + ggtitle("N(0, 1)")
+g2 <- plot_normal(0, 3) + theme_bw() + xlim(-10, 10) + ylim(0, 0.4) + ggtitle("N(0, 3)")
+g3 <- plot_normal(0, 6) + theme_bw() + xlim(-10, 10) + ylim(0, 0.4) + ggtitle("N(0, 6)")
+ggarrange(g1, g2, g3, ncol=3, nrow=1)
+```
+</center>
+
+## The Normal Model
+
+- Our data model is as follows,
+
+$$Y_i | \mu \sim N(\mu, \sigma^2)$$
+
+- The joint pdf is as follows,
+
+$$
+f(\overset{\to}y | \mu) = \prod_{i=1}^n f(y_i | \mu) = \prod_{i=1}^n \frac{1}{\sqrt{2 \pi \sigma^2}} \exp \left\{ \frac{-(y_i-\mu)^2}{2\sigma^2} \right\}
+$$
+
+- Meaning the likelihood is as follows,
+
+$$
+L(\mu|\overset{\to}y) \propto \prod_{i=1}^n \frac{1}{\sqrt{2 \pi \sigma^2}} \exp \left\{ \frac{-(y_i-\mu)^2}{2\sigma^2} \right\} = \exp \left\{ \frac{- \sum_{i=1}^n(y_i-\mu)^2}{2\sigma^2} \right\}
+$$
+
+## The Normal Model
+
+- Our data model is as follows,
+
+$$Y_i | \mu \sim N(\mu, \sigma^2)$$
+
+- Returning to our brain analysis, we will assume that the hippocampal volumes of our $n = 25$ subjects have a normal distribution with mean $\mu$ and standard deviation $\sigma$.
+    - Right now, we are only interested in $\mu$, so we assume $\sigma = 0.5$ cm^3^
+    - This choice suggests that most people have hippocampal volumes within $2 \sigma = 1$ cm^3^.
+
+## Normal Prior
+
+- We know that with $Y_i | \mu \sim N(\mu, \sigma^2)$, $\mu \in \mathbb{R}$.
+    - We think a normal prior for $\mu$ is reasonable.
+    
+- Thus, we assume that $\mu$ has a normal distribution around some mean, $\theta$, with standard deviation, $\tau$.
+
+$$\mu \sim N(\theta, \tau^2),$$
+
+- meaning that $\mu$ has prior pdf
+
+$$f(\mu) = \frac{1}{\sqrt{2 \pi \tau^2}} \exp \left\{ \frac{-(\mu - \theta)^2}{2 \tau^2} \right\}$$
+
+## Tuning the Normal Prior
+
+- We can tune the hyperparameters $\theta$ and $\tau$ to reflect our understanding and uncertainty about the average hippocampal volume ($\mu$) among people with a history of concussions.
+
+- Wikipedia showed us that hippocampal volumes tend to be between 6 and 7 cm^3^ $\to$ $\theta=6.5$.
+    
+- When we set the standard deviation we can check the plausible range of values of $\mu$:
+    - Follow up: why 2?
+
+$$\theta \pm 2 \times \tau$$
+
+- If we assume $\tau=0.4$,
+
+$$(6.5 \pm 2 \times 0.4) = (5.7, 7.3)$$
+
+## Tuning the Normal Prior
+
+- Thus, our tuned prior is  $\mu \sim N(6.5, 0.4^2)$
+
+<center>
+```{r}
+#| echo: false
+plot_normal(6.5, 0.4) + theme_bw()
+```
+</center>
+
+- This range incorporates our uncertainty - it is wider than the Wikipedia range.
+
+## Normal-Normal Conjugacy
+
+- Let $\mu \in \mathbb{R}$ be an unknown mean parameter and $(Y_1, Y_2, ..., Y_n)$ be an independent $N(\mu, \sigma^2)$ sample where $\sigma$ is assumed to be known.
+
+- The Normal-Normal Bayesian model is as follows:
+
+$$
+\begin{align*}
+Y_i | \mu &\overset{\text{iid}} \sim N(\mu, \sigma^2) \\
+\mu &\sim N(\theta, \tau^2) \\
+\mu | \overset{\to}y &\sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right)
+\end{align*}
+$$
+
+## Normal-Normal Conjugacy
+
+- Let's think about our posterior and some implications,
+
+$$\mu | \overset{\to}y \sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right)$$
+
+- What happens as $n$ increases?
+
+## Normal-Normal Conjugacy
+
+- Let's think about our posterior and some implications,
+
+$$\mu | \overset{\to}y \sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right)$$
+
+- What happens as $n$ increases?
+
+$$
+\begin{align*}
+\frac{\sigma^2}{n\tau^2 + \sigma^2} &\to 0 \\
+\frac{n\tau^2}{n\tau^2 + \sigma^2} &\to 1 \\
+\frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} &\to 0
+\end{align*}
+$$
+
+## Normal-Normal Conjugacy
+
+- Let's think about our posterior and some implications,
+
+$$
+\begin{align*}
+\frac{\sigma^2}{n\tau^2 + \sigma^2} &\to 0 \\
+\frac{n\tau^2}{n\tau^2 + \sigma^2} &\to 1 \\
+\frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} &\to 0
+\end{align*}
+$$
+
+- The posterior mean places less weight on the prior mean and more weight on the sample mean $\bar{y}$.
+
+- The posterior certainty about $\mu$ increases and becomes more in sync with the data.
+
+## The Normal Posterior Model
+
+- Let us now apply this to our example.
+
+- We have our prior model, $\mu \sim N(6.5, 0.4^2)$.
+
+- Let's look at the `football` dataset in the `bayesrules` package.
+
+```{r}
+data(football)
+concussion_subjects <- football %>% 
+  filter(group == "fb_concuss")
+```
+
+- What is the average hippocampal volume?
+
+## The Normal Posterior Model
+
+- Let us now apply this to our example.
+
+- We have our prior model, $\mu \sim N(6.5, 0.4^2)$.
+
+- Let's look at the `football` dataset in the `bayesrules` package.
+
+```{r}
+data(football)
+concussion_subjects <- football %>% 
+  filter(group == "fb_concuss")
+```
+
+- What is the average hippocampal volume?
+
+```{r}
+mean(concussion_subjects$volume)
+```
+
+## The Normal Posterior Model
+
+- We can also plot the density!
+
+<center>
+```{r}
+concussion_subjects %>% ggplot(aes(x = volume)) + geom_density() + theme_bw()
+```
+</center>
+
+## The Normal Posterior Model
+
+- Now, we can plug in the information we have ($n = 25, \bar{y} = 5.735, \sigma = 0.5$) into our likelihood,
+
+$$
+L(\mu|\overset{\to}y) \propto \exp \left\{ \frac{-(5.735 - \mu)^2}{2(0.5^2/25)} \right\}
+$$
+
+<center>
+```{r}
+#| echo: false
+plot_normal_likelihood(y = concussion_subjects$volume, sigma = 0.5) + theme_bw()
+```
+</center>
+
+## The Normal Posterior Model
+
+- We are now ready to put together our posterior:
+    - Data distribution, $Y_i | \mu \overset{\text{iid}} \sim N(\mu, \sigma^2)$
+    - Prior distribution, $\mu \sim N(\theta, \tau^2)$    
+    - Posterior distribution, $\mu | \overset{\to}y \sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right)$
+    
+- Given our information ($\theta=6.5$, $\tau=0.4$, $n=25$, $\bar{y}=5.735$, $\sigma=0.5$), our posterior is
+
+$$
+\mu | \overset{\to}y \sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right)
+$$
+
+## The Normal Posterior Model
+
+- Given our information ($\theta=6.5$, $\tau=0.4$, $n=25$, $\bar{y}=5.735$, $\sigma=0.5$), our posterior is
+
+
+$$
+\begin{align*}
+\mu | \overset{\to}y &\sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right) \\
+&\sim N\left( 6.5 \frac{0.5^2}{25 \cdot 0.4^2 + 0.5^2} + 5.735 \frac{25 \cdot 0.4^2}{25 \cdot 0.4^2 + 0.5^2}, \frac{0.4^2 \cdot 0.5^2}{25 \cdot 0.4^2 + 0.5^2} \right) \\
+&\sim N(6.5 \cdot 0.0588 + 5.737 \cdot 0.9412, 0.09^2) \\
+&\sim N(5.78, 0.09^2)
+\end{align*}
+$$
+
+- Looking at the posterior, we can see the weights
+    - 95% on the data mean, 6% on the prior mean.
+
+## The Normal Posterior Model
+
+- Looking at just the prior and data distributions,
+
+<center>
+```{r}
+#| echo: false
+plot_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5, y_bar = 5.735, n = 25, posterior = FALSE) + theme_bw()
+```
+</center>
+
+## The Normal Posterior Model
+
+- Now including the posterior,
+
+<center>
+```{r}
+#| echo: false
+plot_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5, y_bar = 5.735, n = 25, posterior = TRUE) + theme_bw()
+```
+</center>
+
+## The Normal Posterior Model
+
+- We can use the `summarize_normal_normal()` function to summarize the distribution,
+
+```{r}
+summarize_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5, y_bar = 5.735, n = 25) 
+```
+
+
+## Wrap Up: Normal-Normal Model
+
+- We have built the Normal-Normal model for $\mu$, an unknown mean.
+
+$$
+\begin{equation*}
+\begin{aligned}
+Y_i | \mu &\overset{\text{iid}} \sim N(\mu, \sigma^2) \\
+\mu &\sim N(\theta, \tau^2) &
+\end{aligned} 
+\Rightarrow 
+\begin{aligned}
+&& \mu | \overset{\to}y &\sim N\left( \theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}, \frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2} \right) \\
+\end{aligned}
+\end{equation*}
+$$
+
+- The prior model, $f(\mu)$, is given by N($\theta,\tau^2$).
+
+- The data model, $f(Y|\mu)$, is given by N($\mu, \sigma^2$).
+
+- The posterior model is a Normal distribution with updated parameters 
+    - mean = $\theta \frac{\sigma^2}{n\tau^2 + \sigma^2} + \bar{y} \frac{n\tau^2}{n\tau^2 + \sigma^2}$
+    - variance = $\frac{\tau^2 \sigma^2}{n \tau^2 + \sigma^2}$
+
+## Wrap Up
+
+- This week we have learned the other two *conjugate families*.
+    - Gamma-Poisson: count outcomes
+    - Normal-Normal: continuous outcomes
+    
+- While we are not forced to analyze our data using conjugate families, our lives are much easier when we can use the known relationships.
+
+- Now that we know how to specify the posterior distributions, we can focus on moving forward with drawing conclusions about the posterior distribution.
+    - Probabilities
+    - Inference
+
+## Homework / Practice
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 5.9
+    - 5.10

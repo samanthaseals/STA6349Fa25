@@ -1,0 +1,617 @@
+---
+title: "Thinking Like a Bayesian"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+
+## Introduction
+
+- Before today:
+    - Refresher on probability theory
+    - What does each distribution do?
+        - beta $\to$ outcomes limited to [0, 1]
+        - binomial $\to$ binary outcomes
+        - gamma $\to$ continuous & positive outcomes; skewed right
+        - normal $\to$ continuous outcomes; mound-shaped & symmetric distribution
+        - Poisson $\to$ count outcomes; skewed right
+        - uniform $\to$ each outcome has equal probability; rectangular distribution
+        
+- Today: building up Bayesian analysis concepts
+
+## Thinking Like a Bayesian
+
+- Bayesian analysis involves updating beliefs based on observed data.
+
+![](images/W05-L1-a.png){fig-align="center"} 
+
+## Thinking Like a Bayesian
+
+- This is the natural Bayesian knowledge-building process of:
+    - acknowledging your preconceptions (prior distribution),
+    - using data (data distribution) to update your knowledge (posterior distribution), and 
+    - repeating (posterior distribution $\to$ new prior distribution)
+
+![](images/W05-L1-b.png){fig-align="center"} 
+
+## Thinking Like a Bayesian 
+
+- Bayesian and frequentist analyses share a common goal: to learn from data about the world around us. 
+    - Both Bayesian and frequentist analyses use data to fit models, make predictions, and evaluate hypotheses. 
+    - When working with the same data, they will typically produce a similar set of conclusions. 
+    
+- Statisticians typically identify as either a "Bayesian" or "frequentist" ...
+    - 🚫 We are not going to "take sides." 
+    - ✅ We will see these as tools in our toolbox.
+
+## Thinking Like a Bayesian
+    
+- Bayesian probability: the relative plausibility of an event.
+    - Considers prior belief.
+
+![](images/W05-L1-b.png){fig-align="center"}     
+    
+## Thinking Like a Bayesian
+
+- Frequentist probability: the long-run relative frequency of a repeatable event.
+    - Does not consider prior belief.   
+    
+![](images/W05-L1-c.png){fig-align="center"} 
+
+## Thinking Like a Bayesian
+
+- The Bayesian framework depends upon prior information, data, and the balance between them.
+
+    - The balance between the prior information and data is determined by the relative strength of each
+
+![](images/W05-L1-d.png){fig-align="center"} 
+
+- When we have little data, our posterior can rely more on prior knowledge. 
+
+- As we collect more data, the prior can lose its influence.
+
+## Thinking Like a Bayesian
+
+- We can also use this approach to combine analysis results.
+
+![](images/W05-L1-e.png){fig-align="center"} 
+
+## Thinking Like a Bayesian
+
+- We will use an example to work through Bayesian logic.
+
+- The Collins Dictionary named "fake news" the 2017 term of the year. 
+
+    - Fake, misleading, and biased news has proliferated along with online news and social media platforms which allow users to post articles with little quality control. 
+    
+- We want to flag articles as "real" or "fake." 
+
+- We'll examine a sample of 150 articles which were posted on Facebook and fact checked by five BuzzFeed journalists (Shu et al. 2017). 
+
+## Thinking Like a Bayesian
+
+- Information about each article is stored in the `fake_news` dataset in the `bayesrules` package. 
+
+```{r}
+fake_news <- bayesrules::fake_news
+print(colnames(fake_news))
+```
+
+## Thinking Like a Bayesian
+
+- We could build a simple news filter which uses the following rule: since most articles are real, we should read and believe all articles. 
+    - While this filter would solve the problem of disregarding real articles, we would read lots of fake news. 
+    - It also only takes into account the overall rates of, not the typical features of, real and fake news.
+
+## Thinking Like a Bayesian
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(janitor)
+```
+
+- Suppose that the most recent article posted to a social media platform is titled: *The president has a funny secret!*
+    - Some features of this title probably set off some red flags. 
+    - For example, the usage of an exclamation point might seem like an odd choice for a real news article. 
+
+- In the dataset, what is the split of real and fake articles?
+
+```{r}
+#| echo: false
+fake_news %>% tabyl(type)
+```
+
+## Thinking Like a Bayesian
+
+- In the dataset, what is the split of real and fake articles?
+
+```{r}
+#| echo: false
+fake_news %>% tabyl(type)
+```
+
+- Our data backs up our instinct on the article, 
+
+```{r}
+#| echo: false
+fake_news %>% tabyl(title_has_excl, type) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns()
+```
+    
+- In this dataset, 26.67% (16 of 60) of fake news titles but only 2.22% (2 of 90) of real news titles use an exclamation point.
+    
+## Thinking Like a Bayesian
+
+- We now have two pieces of contradictory information. 
+    - Our prior information suggested that incoming articles are most likely real. 
+    - However, the exclamation point data is more consistent with fake news. 
+
+![](images/W05-L1-f.png){fig-align="center"} 
+
+- Thinking like Bayesians, we know that balancing both pieces of information is important in developing a posterior understanding of whether the article is fake.
+
+## Building a Bayesian Model
+
+- Our fake news analysis studies two variables: 
+    - an article's fake vs real status and 
+    - its use of exclamation points. 
+    
+- We can represent the randomness in these variables using probability models. 
+
+- We will now build: 
+    - a prior probability model for our prior understanding of whether the most recent article is fake; 
+    - a model for interpreting the exclamation point data; and, eventually, 
+    - a posterior probability model which summarizes the posterior plausibility that the article is fake.
+
+## Building a Bayesian Model
+
+- Let's now formalize our prior understanding of whether the new article is fake. 
+
+- Based on our `fake_news` data, we saw that 40% of articles are fake and 60% are real.
+
+    - Before reading the new article, there’s a 0.4 prior probability that it's fake and a 0.6 prior probability it's not.
+    
+$$P\left[B\right] = 0.40 \text{ and } P\left[B^c\right] = 0.60$$    
+
+- Remember that a valid probability model must: 
+
+    1. account for all possible events (all articles must be fake or real); 
+    2. it assigns prior probabilities to each event; and 
+    3. the probabilities sum to one.
+    
+## Building a Bayesian Model
+    
+```{r}
+#| echo: false
+library(gt)
+fake_news %>% tabyl(title_has_excl, type) %>%
+  adorn_percentages("col") %>%
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns() %>%
+  gt() %>%
+  opt_table_font(size = px(40))
+```       
+    
+- We have the following conditional probabilities:
+    - If an article is fake ($B$), then there's a roughly 26.67% chance it uses exclamation points in the title. 
+    - If an article is real ($B^c$), then there's only a roughly 2.22% chance it uses exclamation points. 
+    
+## Building a Bayesian Model
+
+- We have the following conditional probabilities:
+    - If an article is fake ($B$), then there’s a roughly 26.67% chance it uses exclamation points in the title. 
+    - If an article is real ($B^c$), then there’s only a roughly 2.22% chance it uses exclamation points. 
+    
+- Looking at the probabilities, we can see that 26.67% of fake articles vs. 2.22% of real articles use exclamation points.
+    - Exclamation point usage is much more likely among fake news than real news.
+    - We have evidence that the article is fake.    
+    
+## Building a Bayesian Model
+
+- Note that we know that the incoming article used exclamation points ($A$), but we do not actually know if the article is fake ($B$ or $B^c$).
+
+- In this case, we compared $P[A|B]$ and $P[A|B^c]$ to ascertain the relative likelihood of observing $A$ under different scenarios.
+
+$$L\left[B|A\right] = P\left[A|B\right] \text{ and } L\left[B^c|A\right] = P\left[A|B^c\right]$$
+
+## Building a Bayesian Model
+
+| Event | *B* | *B^c^* | Total |
+|--|:--:|:--:|:--:|
+| Prior Probability | 0.4 | 0.6 | 1.0 |
+| Likelihood | 0.2667 | 0.0222 | 0.2889 |
+
+$$L\left[B|A\right] = P\left[A|B\right] \text{ and } L\left[B^c|A\right] = P\left[A|B^c\right]$$
+
+- It is important for us to note that the likelihood function is *not* a probability function.
+    - This is a framework to compare the relative comparability of our exclamation point data with $B$ and $B^c$.
+
+## Building a Bayesian Model
+
+| Event | *B* (fake) | *B^c^* (real) | Total |
+|--|:--:|:--:|:--:|
+| Prior Probability | 0.4 | 0.6 | 1.0 |
+| Likelihood | 0.2667 | 0.0222 | 0.2889 |
+
+- The prior evidence suggested the article is most likely real,
+
+$$P[B] = 0.4 < P[B^c] = 0.6$$
+
+- The data, however, is more consistent with the article being fake,
+
+$$L[B|A] = 0.2667 > L[B^c|A] = 0.0222$$
+
+## Building a Bayesian Model
+
+- We can summarize our probabilities in a table, 
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       |     |       |       |
+| $A^c$     |     |       |       |
+| **Total** | 0.4 | 0.6   | 1     |
+
+- As found earlier, $P[A|B] = 0.2667$ and $P[A|B^c]=0.0222$.
+
+$$
+\begin{align*}
+P[A \cap B] &= P[A|B] \times P[B] \\
+&= 0.2667 \times 0.4 \\
+&= 0.1067
+\end{align*}
+$$
+
+
+## Building a Bayesian Model
+
+- Here's what we know,
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       | 0.1067    |       |       |
+| $A^c$     |     |       |       |
+| **Total** | 0.4 | 0.6   | 1     |
+
+- We also know $P[A|B] = 0.2667$ and $P[A|B^c]=0.0222$.
+
+$$
+\begin{align*}
+P[A^c \cap B] &= P(A^c|B) \times P[B]  \\
+&= (1-P[A|B]) \times P[B] \\
+&= (1-0.2667) \times 0.4 \\
+&= 0.2933
+\end{align*}
+$$
+
+## Building a Bayesian Model
+
+- Here's what we know,
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       | 0.1067 |       |       |
+| $A^c$     | 0.2933 |       |       |
+| **Total** | 0.4 | 0.6   | 1     |
+
+- We also know $P[A|B] = 0.2667$ and $P[A|B^c]=0.0222$.
+
+$$
+\begin{align*}
+P[A \cap B^c] &= P[A|B^c] \times P[B^c]  \\
+&= 0.0222 \times 0.6 \\
+&= 0.0133
+\end{align*}
+$$
+
+## Building a Bayesian Model
+
+- Here's what we know,
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       | 0.1067 | 0.0133 |       |
+| $A^c$     | 0.2933 |       |       |
+| **Total** | 0.4 | 0.6   | 1     |
+
+- We also know $P[A|B] = 0.2667$ and $P[A|B^c]=0.0222$.
+
+$$
+\begin{align*}
+P[A^c \cap B^c] &= P[A^c|B^c] \times P[B^c]  \\
+&= 0.9778 \times 0.6 \\
+&= 0.5867
+\end{align*}
+$$
+
+## Building a Bayesian Model
+
+- Here's what we know,
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       | 0.1067 | 0.0133 |       |
+| $A^c$     | 0.2933 | 0.5867 |       |
+| **Total** | 0.4 | 0.6   | 1     |
+
+- Finally,
+
+$$
+\begin{align*}
+&P[A] = 0.1067 + 0.0133 = 0.12 \\
+&P[A^c] = 0.2933 + 0.5867 = 0.88
+\end{align*}
+$$
+
+## Building a Bayesian Model
+
+- Using rules of probability, we have completed the table.
+
+|           | $B$ | $B^c$ | Total |
+|-----------|:---:|:-----:|:-----:|
+| $A$       | 0.1067 | 0.0133 | 0.12 |
+| $A^c$     | 0.2933 | 0.5867 | 0.88 |
+| **Total** | 0.4 | 0.6   | 1     |
+
+## Building a Bayesian Model
+
+- With more information, we can answer the question: what is the probability that the latest article is fake?
+
+- We will use the posterior probability, $P[B|A]$, which is found using Bayes' Rule.
+
+- **Bayes' Rule**: For events $A$ and $B$, 
+
+$$P[B|A] = \frac{P[A \cap B]}{P[A]} = \frac{P[B] \times L[B|A]}{P[A]}$$
+
+- But really, we can think about it like this,
+
+$$\text{posterior} = \frac{\text{prior} \times \text{likelihood}}{\text{normalizing constant}}$$
+
+## Example Set Up
+
+- In 1996, Gary Kasparov played a six-game chess match against the IBM supercomputer Deep Blue. 
+    - Of the six games, Kasparov won three, drew two, and lost one. 
+    - Thus, Kasparov won the overall match. 
+
+- Kasparov and Deep Blue were to meet again for a six-game match in 1997. 
+
+- Let $\pi$ denote Kasparov's chances of winning any particular game in the re-match.
+    - Thus, $\pi$ is a measure of his overall skill relative to Deep Blue. 
+    - Given the complexity of chess, machines, and humans, $\pi$ is unknown and can vary over time.
+        - i.e., $\pi$ is a *random variable*.
+
+## Example Set Up
+
+- Our first step is to start with a prior model. This model
+    - Identifies what values $\pi$ can take,
+    - assigns a prior weight or probability to each, and
+    - these probabilities sum to 1.
+
+- Based on what we were told, the prior model for $\pi$ in our example,
+
+| $\pi$    | 0.2  | 0.5  | 0.8  | Total |
+|----------|:----:|:----:|:----:|:----:|
+| $f(\pi)$ | 0.10 | 0.25 | 0.65 | 1     |
+
+## Example Set Up
+
+- Based on what we were told, the prior model for $\pi$ in our example,
+
+| $\pi$    | 0.2  | 0.5  | 0.8  | Total |
+|----------|:----:|:----:|:----:|:----:|
+| $f(\pi)$ | 0.10 | 0.25 | 0.65 | 1     |
+
+- Note that this is an incredibly simple model.
+    - The win probability can technically be any number $\in [0, 1]$.
+    - However, this prior assumes that $\pi$ has a discrete set of possibilities: 20%, 50%, or 80%.
+
+## Example Set Up
+
+- In the second step of our analysis, we collect and process data which can inform our understanding of  $\pi$.
+ 
+- Here, $Y$ = the number of the six games in the 1997 re-match that Kasparov wins.
+    - As chess match outcome isn’t predetermined, $Y$ is a random variable that can take any value in $\{0, 1, 2, 3, 4, 5, 6\}$.
+    
+- Note that $Y$ inherently depends upon $\pi$.
+    - If $\pi = 0.80$, $Y$ would also be high (on average).
+    - If $\pi = 0.20$, $Y$ would also be low (on average).
+    
+- Thus, we must model this dependence of $Y$ on $\pi$ using a conditional probability model.
+
+## Binomial Data Model
+
+- We must make two assumptions about the chess match:
+    - Games are independent (the outcome of one game does not influence the outcome of another).
+    - Kasparov has an equal probability of winning any game in the match.
+        - i.e., probability of winning does not increase or decrease as the match goes on.
+
+- We will use a binomial model for this problem.
+    - In our case,
+
+$$Y|\pi \sim \text{Bin}(6, \pi)$$
+
+## Binomial Data Model
+
+- Let's assume $\pi = 0.8$.
+
+- The probability that he would win all 6 games is approximately 26%.
+
+$$f(y=6|\pi=0.8) = {6 \choose 6} 0.8^6 (1-0.8)^{6-6}, $$  
+
+```{r}
+dbinom(6, 6, 0.8)
+```
+
+## Binomial Data Model
+
+- Let's assume $\pi = 0.8$.
+
+- The probability that he would win none of the games is approximately 0%.
+
+$$f(y=0|\pi=0.8) = {6 \choose 0} 0.8^0 (1-0.8)^{6-0}, $$  
+
+```{r}
+dbinom(0, 6, 0.8)
+```
+
+
+## Binomial Data Model
+
+- We want to reproduce Figure 2.5 from the [Bayes Rules! textbook (from Section 2.3.2)](https://www.bayesrulesbook.com/chapter-2#cousin-cole).
+
+![](images/fig2-5.png){fig-align="center" width="80%"} 
+
+- Each group will complete the graph for a specified value of $\pi$.
+    - Campus: $\pi=0.2$
+    - Zoom 1: $\pi=0.5$
+    - Zoom 2: $\pi=0.8$
+
+## Binomial Data Model
+
+- Note that the Binomial gives us the *theoretical* model of the data we might observe. 
+
+    - Kasparov only won one of the six games against Deep Blue in 1997 ($Y=1$).
+    
+- Next step: how compatible this particular data is with the various possible $\pi$?
+
+    - What is the likelihood of Kasparov winning $Y=1$ game under each possible $\pi$?
+    
+- Recall, $f(y|\pi) = L(\pi|Y=y)$. When $Y=1$,
+
+$$
+\begin{align*}
+L(\pi | y = 1) &= f(y=1|\pi) \\
+&= {6 \choose 1} \pi^1 (1-\pi)^{6-1} \\
+&= 6\pi(1-\pi)^5
+\end{align*}
+$$
+
+- Note that <u>we do not expect all likelihoods to sum to 1</u>.
+    
+## Binomial Data Model
+
+- Use your results from earlier to tell me the resulting likelihood values.
+
+| $\pi$        | 0.2    | 0.5    | 0.8 |
+|--------------|:------:|:------:|:----:|
+| $L(\pi|y=1)$ | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  | &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; |
+
+## Binomial Data Model
+
+- Use your results from earlier to tell me the resulting likelihood values.
+    
+| $\pi$        | 0.2    | 0.5    | 0.8    |
+|--------------|:------:|:------:|:----:|
+| $L(\pi|y=1)$ | 0.3932 | 0.0938 | 0.0015 |
+
+- As we can see, the likelihoods do not sum to 1.
+
+## Normalizing Constant
+
+- Bayes' Rule requires three pieces of information:
+    - Prior
+    - Likelihood
+    - Normalizing constant
+    
+- **Normalizing constant**: ensures that the sum of all probabilities is equal to 1.
+    - It can be a scalar or a function.
+    - Every probability distribution that does not sum to 1 will have a normalizing constant.
+    
+## Normalizing Constant
+    
+- We now must determine the total probability that Kasparov would win $Y=1$ games across all possible win probabilities $\pi$, $f(y=1)$.
+
+$$
+\begin{align*}
+f(y=1) =& \sum_{\pi} L(\pi |y=1)f(\pi) \\
+=& L(\pi=0.2|y=1)f(\pi=0.2) + L(\pi=0.5|y=1)f(\pi=0.5) + \\ 
+ & L(\pi=0.8|y=1)f(\pi=0.8) 
+\end{align*}
+$$
+
+- Work with your group to find the normalizing constant.
+
+## Normalizing Constant
+    
+- We now must determine the total probability that Kasparov would win $Y=1$ games across all possible win probabilities $\pi$, $f(y=1)$.
+
+$$
+\begin{align*}
+f(y=1) =& \sum_{\pi} L(\pi |y=1)f(\pi) \\
+=& L(\pi=0.2|y=1)f(\pi=0.2) + L(\pi=0.5|y=1)f(\pi=0.5) + \\ 
+& L(\pi=0.8|y=1)f(\pi=0.8) \\
+\approx& 0.3932 \cdot 0.10 + 0.0938 \cdot 0.25 + 0.0015 \cdot 0.65 \\
+\approx& 0.0637
+\end{align*}
+$$
+
+- Across all possible values of $\pi$, there is about a 6% chance that Kasparov would have won only one game.
+
+## Posterior Probability Model
+
+- Now recall,
+
+$$\text{posterior} = \frac{\text{prior} \times \text{likelihood}}{\text{normalizing constant}}$$
+
+- In our example, where $y = 1$,
+
+$$f(\pi | y=1) = \frac{f(\pi) L(\pi | y = 1)}{f(y=1)} \  \text{for} \ \pi \in \{ 0.2, 0.5, 0.8\}$$
+
+- Work with your group to find the posterior probabilities.
+
+    - You will have one posterior probability for each value of $\pi$.
+
+## Posterior Probability Model
+
+- Note!! We do not have to calculate the normalizing constant!
+
+- We can note that $f(Y=y) = 1/c$.
+
+- Then, we say that 
+
+$$
+\begin{align*}
+f(\pi | y) &= \frac{f(\pi) L(\pi|y)}{f(y)} \\
+& \propto  f(\pi) L(\pi|y) \\
+\\
+\text{posterior} &\propto \text{prior} \cdot \text{likelihood}
+\end{align*}
+$$
+
+## Wrap Up
+
+- Today we learned how to, in general, approach Bayesian analysis.
+
+- Next week, we will formalize what we observed today and learn about the conjugate families.
+    - Beta-binomial
+    - Gamma-Poisson
+    - Normal Normal
+    
+## Homework / Practice
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+    - 1.3
+    - 1.4
+    - 1.8
+    - 2.4
+    - 2.9
