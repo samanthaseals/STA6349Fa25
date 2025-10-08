@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/schedule.html</loc>
-    <lastmod>2025-10-06T20:46:32.352Z</lastmod>
+    <lastmod>2025-10-08T20:40:31.068Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/06-1-gamma-poisson.html</loc>
@@ -17,28 +17,32 @@
     <lastmod>2025-09-22T16:34:58.316Z</lastmod>
   </url>
   <url>
-    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/03-2-probability-distributions.html</loc>
-    <lastmod>2025-09-17T16:35:30.890Z</lastmod>
-  </url>
-  <url>
-    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/05-1-beta-binomial.html</loc>
-    <lastmod>2025-10-01T19:56:04.395Z</lastmod>
-  </url>
-  <url>
-    <loc>https://samanthaseals.github.io/STA6349Fa25/index.html</loc>
-    <lastmod>2025-08-25T02:36:45.741Z</lastmod>
-  </url>
-  <url>
-    <loc>https://samanthaseals.github.io/STA6349Fa25/files/assignments/assignment1.html</loc>
-    <lastmod>2025-09-17T20:50:54.666Z</lastmod>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/07-1-approx-posterior.html</loc>
+    <lastmod>2025-10-08T20:06:01.345Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/05-2-balance-squentiality.html</loc>
     <lastmod>2025-09-29T20:23:53.877Z</lastmod>
   </url>
   <url>
-    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/07-1-approx-posterior.html</loc>
-    <lastmod>2025-10-06T20:45:30.336Z</lastmod>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/assignments/assignment1.html</loc>
+    <lastmod>2025-09-17T20:50:54.666Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/index.html</loc>
+    <lastmod>2025-08-25T02:36:45.741Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/05-1-beta-binomial.html</loc>
+    <lastmod>2025-10-01T19:56:04.395Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/03-2-probability-distributions.html</loc>
+    <lastmod>2025-09-17T16:35:30.890Z</lastmod>
+  </url>
+  <url>
+    <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/07-2-bayesian-inference.html</loc>
+    <lastmod>2025-10-08T20:34:37.903Z</lastmod>
   </url>
   <url>
     <loc>https://samanthaseals.github.io/STA6349Fa25/files/lectures/05-2-example.html</loc>
