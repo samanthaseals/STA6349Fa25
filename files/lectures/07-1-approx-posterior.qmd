@@ -818,21 +818,17 @@ rhat(bb_sim, pars = "pi")
 
 - If we were to find $\hat{R}$ for the other (obviously bad) simulation, it would be 5.35 😱
 
-## **Homework**
+## **Homework / Practice**
 
-- 6.5
-
-- 6.6
-
-- 6.7
-
-- 6.13
-
-- 6.14
-
-- 6.15
-
-- 6.17
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+    
+    - 6.5
+    - 6.6
+    - 6.7
+    - 6.13
+    - 6.14
+    - 6.15
+    - 6.17
 
 
 
