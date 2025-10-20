@@ -1,0 +1,879 @@
+---
+title: "Regression in the Bayesian Framework"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction
+
+- Before today, we effectively were performing one-sample tests of means, proportions, and counts.
+
+- Now, we will focus on incorporating just a single predictor into our analysis. 
+    - Overall question: what is the relationship between $Y$ (outcome) and $X$ (predictor)?
+
+- We now switch to thinking about analysis in terms of regression.
+ 
+    
+## Working Example
+
+- *Capital Bikeshare* is a bike sharing service in the Washington, D.C. area. To best serve its registered members, the company must understand the demand for its service. We will analyze the number of rides taken on a random sample of $n$ days, $(Y_1, Y_2, ..., Y_n)$.
+
+- Beacuse $Y_i$ is a count variable, you might assume that ridership might need the Poisson distribution. However, past bike riding seasons have exhibited bell-shaped daily ridership with a variability in ridership that far exceeds the typical ridership.
+    - (i.e., the Poisson assumption of $\mu = \sigma$ does not hold here)
+    
+- We will instead assume that the number of rides varies normally around some typical ridership,  $\mu$, with standard deviation, $\sigma$. 
+
+$$ Y_i|\mu,\sigma \overset{\text{ind}}{\sim} N(\mu, \sigma^2)$$
+
+## Working Example
+
+- In our example, $Y$ is the number of rides and $X$ is the temperature.
+   
+- Our specific goal will be to model the relationship between ridership and temperature: 
+    - Does ridership tend to increase on warmer days? 
+    - If so, by how much? 
+    - How strong is this relationship?
+    
+- It is reasonable to assume a positive relationship between temperature and number of rides.
+    - As it warms up outside, folks are more likely to puruse outdoor activities, including biking.    
+    
+- For learning purposes, let's focus on the model with a single predictor (`y ~ x` in R).
+    
+## Building the Regression Model
+
+- Suppose we have *n* data pairs,
+
+$$ \{ (Y_1, X_1), (Y_2, X_2), ..., (Y_n, X_n) \} $$
+
+- where $Y_i$ is the number of rides and $X_i$ is the high temperature (^o^F) on day $i$.
+
+- Assuming that the relationship is linear, we can model
+
+$$\mu_i = \beta_0 + \beta_1 X_i,$$
+
+- where $\beta_0$ and $\beta_1$ are model coefficients.
+
+## Building the Regression Model
+
+- What do we mean by "model coefficients?"
+
+$$\mu_i = \beta_0 + \beta_1 X_i,$$
+
+- $\beta_0$ is the baseline for where our model crosses the $y$-axis, i.e., when $X_i=0$.
+    - Is this meaningful when we are talking about the average ridership when it is $0$^o^F in DC?
+    
+## Building the Regression Model
+
+- What do we mean by "model coefficients?"
+
+$$\mu_i = \beta_0 + \beta_1 X_i,$$
+
+- $\beta_1$ is the slope, or average change, in the outcome ($Y$) for a one unit increase in the predictor ($X$).
+    - Interpretation: for a [1 unit of predictor] increase in [the predictor], [the outcome] [increases or decreases] by [abs($\beta_1$)].
+    - In our example, suppose $\beta_1=4.5$. For a 1^o^F increase in the temperature, the ridership increases by 4.5 riders.
+
+## Building the Regression Model
+
+- We are now interested in the model
+
+$$Y_i|\beta_0,\beta_1,\sigma\overset{\text{ind}}{\sim} N(\mu_i, \sigma^2) \text{ with } \mu_i = \beta_0 + \beta_1 X_i$$
+
+- Note that $\mu_i$ is the *local mean* (for a specific value of $X$).
+    - In our data, $\mu_i$ is the mean ridership for day $i$.
+
+- The *global mean* (regardless of the value of $X$) is given by $\mu$.
+    - In our data, $\mu$ is the mean ridership, regardless of day.
+    
+- Under this model, $\sigma$ is now measuring the variability from the local mean.    
+
+## Building the Regression Model
+
+- We know the assumptions for linear regression in the frequentist framework. 
+
+- In Bayesian Normal regression,
+    - The observations are *independent*.
+    - $Y$ can be written as a *linear function* of $X$, $\mu = \beta_0 + \beta_1 X$.
+    - For any value of $X$, $Y$ varies *normally* around $\mu$ with constant standard deviation $\sigma$.
+    
+## Building the Regression Model
+    
+- First, we will assume that our prior models of $\beta_0$, $\beta_1$, and $\sigma$ are independent.
+
+- It is common to use the a normal prior for $\beta_0$ and $\beta_1$.
+
+$$ 
+\begin{align*}
+  \beta_0 &\sim N(m_0, s_0^2) \\
+  \beta_1 &\sim N(m_1, s_1^2)
+\end{align*}
+$$
+
+- Then, it is the default to use the exponential for $\sigma$; both are restricted to positive values.
+
+$$\sigma \sim \text{Exp}(l)$$
+
+- Note that $E[\sigma] = 1/l$ and $\text{sd}[\sigma] = 1/l$.
+
+## Building the Regression Model
+
+- Thus, our regression model has the following formulation:
+
+$$
+\begin{align*}
+&\text{data}: & Y_i|\beta_0, \beta_1, \sigma & \overset{\text{ind}}{\sim} N(\mu_i, \sigma^2) \text{ with } \mu_i = \beta_0 + \beta_1 X_i \\
+&\text{priors:} &\beta_0 & \sim N(m_0, s_0^2) \\
+& & \beta_1  &\sim N(m_1, s_1^2) \\
+& & & \sigma \sim \text{Exp}(l)
+\end{align*}
+$$
+
+## Tuning the Prior Models
+
+- Based on the past bikeshare analyses, we have the following *centered* prior understandings. What should our priors be?
+
+1. On an average temperature day for DC (65^o^F-70^o^F), there are typically around 5000 riders, but this could vary between 3000 and 7000 riders.
+
+2. For every one degree increase in temperature, ridership typically increases by 100 rides, but this could vary between 20 and 180 rides.
+
+3. At any given temperature, the daily ridership will tend to vary with a moderate standard deviation of 1250 rides.
+
+## Tuning the Prior Models {.smaller}
+
+1. On an average temperature day for DC (65^o^F-70^o^F), there are typically around 5000 riders, but this could vary between 3000 and 7000 riders.
+
+$$\beta_{0\text{c}} \sim N(5000, 1000^2)$$
+
+2. For every one degree increase in temperature, ridership typically increases by 100 rides, but this could vary between 20 and 180 rides.
+
+$$\beta_{1\text{c}} \sim N(100, 40^2)$$
+
+3. At any given temperature, the daily ridership will tend to vary with a moderate standard deviation of 1250 rides.
+    - Recall, $E[\sigma] = 1/l = 1250$, so $l = 1/1250 = 0.0008$.
+
+$$ \sigma \sim \text{Exp}(0.0008) $$
+
+
+    
+## Tuning the Prior Models
+
+$$\beta_{0\text{c}} \sim N(5000, 1000^2) \ \ \ \beta_{1\text{c}} \sim N(100, 40^2) \ \ \ \sigma \sim \text{Exp}(0.0008)$$
+<center>
+```{r}
+#| echo: false
+library(ggpubr)
+library(bayesrules)
+library(tidyverse)
+ggarrange(
+  plot_normal(mean = 5000, sd = 1000) + labs(x = "beta_0c", y = "pdf") + theme_bw(), 
+  plot_normal(mean = 100, sd = 40) + theme_bw() + labs(x = "beta_1"), 
+  plot_gamma(shape = 1, rate = 0.0008) + theme_bw() + labs(x = "sigma"),
+  ncol=3
+)
+```
+</center>
+
+## Simulating the Posterior
+
+- Let's now update what we know using the `bikes` data in the `bayesrule` package.
+
+- Looking at the basic relationship between the number of rides vs. the temperature (as it feels outside),
+
+<center>
+```{r}
+#| echo: false
+data(bikes)
+bikes %>% ggplot(aes(x = temp_feel, y = rides)) + 
+  geom_point(size = 0.5) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Temperature Feel",
+       y = "Number of Rides") + 
+  theme_bw()
+```
+</center>
+
+## Simulating the Posterior
+
+- Note: I am skipping the derivation / the true math behind how to find the posterior in this situation. (It involves multiple integrals!)
+
+- We will use the `stan_glm()` function from `rstanarm` -- it contains pre-defined Bayesian regression models. 
+    - `stan_glm()` also applies to the wider family of GzLM (i.e., logistic & Poisson/negbin).
+
+```{r}
+#| eval: false
+library(rstanarm)
+bike_model <- stan_glm(rides ~ temp_feel, # data model
+                       data = bikes, # dataset
+                       family = gaussian, # distribution to apply
+                       prior_intercept = normal(5000, 1000), # b0_c
+                       prior = normal(100, 40), # b1_c
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, # 4 chains
+                       iter = 5000*2, # 10000 iterations - throw out first 5000
+                       seed = 84735) # starting place in RNG
+```
+
+## Simulating the Posterior
+
+```{r}
+#| eval: false
+bike_model <- stan_glm(rides ~ temp_feel, # data model
+                       data = bikes, # dataset
+                       family = gaussian, # distribution to apply
+                       prior_intercept = normal(5000, 1000), # b0_c
+                       prior = normal(100, 40), # b1_c
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, # 4 chains
+                       iter = 5000*2, # 10000 iterations - throw out first 5000
+                       seed = 84735) # starting place in RNG
+```
+
+- `stan_glm()` contains three types of information:
+    - Data information:  The first three arguments specify the structure of our data. 
+        - We want to model ridership by temperature (`rides ~ temp_feel`) using `data = bikes` and assuming a Normal data model, aka `family = gaussian`.
+    
+## Simulating the Posterior
+
+```{r}
+#| eval: false
+bike_model <- stan_glm(rides ~ temp_feel, # data model
+                       data = bikes, # dataset
+                       family = gaussian, # distribution to apply
+                       prior_intercept = normal(5000, 1000), # b0_c
+                       prior = normal(100, 40), # b1_c
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, # 4 chains
+                       iter = 5000*2, # 10000 iterations - throw out first 5000
+                       seed = 84735) # starting place in RNG
+```
+
+- `stan_glm()` contains three types of information:
+    - Prior information: The `prior_intercept`, `prior`, and `prior_aux` arguments give the priors for  $\beta_{0\text{c}}$, $\beta_{1\text{c}}$, $\sigma$.
+    
+## Simulating the Posterior
+
+```{r}
+#| eval: false
+bike_model <- stan_glm(rides ~ temp_feel, # data model
+                       data = bikes, # dataset
+                       family = gaussian, # distribution to apply
+                       prior_intercept = normal(5000, 1000), # b0_c
+                       prior = normal(100, 40), # b1_c
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, # 4 chains
+                       iter = 5000*2, # 10000 iterations - throw out first 5000
+                       seed = 84735) # starting place in RNG
+```
+
+- `stan_glm()` contains three types of information:
+    - Markov chain information: The `chains`, `iter`, and `seed` arguments specify the number of Markov chains to run, the length or number of iterations for each chain, and the starting place of the RNG.
+    
+## Simulating the Posterior
+
+- Wait, how does this work when we are looking at three model parameters?
+
+- We will have three vectors -- one for each model parameter.
+
+$$
+\begin{align*}
+  <\beta_0^{(1)}, & \ \beta_0^{(2)}, ..., \beta_0^{(5000)}> \\
+  <\beta_1^{(1)}, & \ \beta_1^{(2)}, ..., \beta_1^{(5000)} > \\
+<\sigma^{(1)}, & \ \sigma^{(2)}, ..., \sigma^{(5000)} > \\
+\end{align*}
+$$
+
+```{r}
+#| echo: false 
+library(bayesrules)
+library(bayesplot)
+library(rstanarm)
+library(janitor)
+library(tidybayes)
+library(broom.mixed)
+library(tidybayes)
+```
+
+## Simulation Diagnostics
+
+- Run the simulation code (from a previous slide).
+
+- Then, run diagnostics:
+
+```{r}
+#| eval: false
+neff_ratio(bike_model)
+rhat(bike_model)
+mcmc_trace(bike_model, size = 0.1)
+mcmc_dens_overlay(bike_model)
+```
+
+```{r}
+#| echo: false
+#| results: "hide"
+
+bike_model <- stan_glm(rides ~ temp_feel, # data model
+                       data = bikes, # dataset
+                       family = gaussian, # distribution to apply
+                       prior_intercept = normal(5000, 1000), # b0_c
+                       prior = normal(100, 40), # b1_c
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, # 4 chains
+                       iter = 5000*2, # 10000 iterations - throw out first 5000
+                       seed = 84735) # starting place in RNG
+```
+
+## Simulation Diagnostics
+
+- Diagnostics:
+
+```{r}
+neff_ratio(bike_model)
+rhat(bike_model)
+```
+
+- Quick diagnostics indicate that the resulting chains are trustworthy. 
+
+- The effective sample size ratios are slightly above 1 and the R-hat values are very close to 1.
+
+## Simulation Diagnostics
+
+- Diagnostics:
+
+<center>
+```{r}
+#| echo: false
+mcmc_trace(bike_model, size = 0.1) + theme_bw()
+```
+</center>
+
+- We can see that the chains are stable, mixing quickly, and behaving much like an independent sample.
+
+## Simulation Diagnostics
+
+- Diagnostics:
+
+<center>
+```{r}
+#| echo: false
+mcmc_dens_overlay(bike_model) + theme_bw()
+```
+</center>
+
+- The density plot lets us visualize and examine the posterior models for each of our regression parameters, $\beta_0$, $\beta_1$, $\sigma$.
+
+## Interpreting the Posterior
+
+- Okay... what does this mean, though? 
+
+```{r}
+tidy(bike_model, effects = c("fixed", "aux"), conf.int = TRUE, conf.level = 0.80)
+```
+
+- Thus, the posterior median relationship is 
+
+$$y = -2194.24 + 82.16x$$
+
+- For a 1 degree increase in temperature, we expect ridership to increase by about 82 rides, with 80% credible interval (75.7, 88.7).
+
+## Interpreting the Posterior
+
+- We can look at alternatives by drawing from the simulated data in `bike_model`.
+    - The `add_fitted_draws()` function is from the `tidybayes` package.
+
+<center>
+```{r}
+#| eval: false
+bikes %>%
+  add_fitted_draws(bike_model, n = 50) %>%
+  ggplot(aes(x = temp_feel, y = rides)) +
+    geom_line(aes(y = .value, group = .draw), alpha = 0.15) + 
+    geom_point(data = bikes, size = 0.05) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw()
+```
+</center>
+
+## Interpreting the Posterior
+
+- We can look at alternatives by drawing from the simulated data in `bike_model`.
+
+<center>
+```{r}
+#| echo: false
+bikes %>%
+  add_fitted_draws(bike_model, n = 50) %>%
+  ggplot(aes(x = temp_feel, y = rides)) +
+    geom_line(aes(y = .value, group = .draw), alpha = 0.15) + 
+    geom_point(data = bikes, size = 0.05) +
+  theme_bw()
+```
+</center>
+
+- We see that the plausible models are not super variable.
+    - This means we're more confident about the relationship we're observing. 
+
+## Interpreting the Posterior
+
+- How does this compare against the frequentist version of regression?
+
+<center>
+```{r}
+#| echo: false
+bikes %>%
+  add_fitted_draws(bike_model, n = 50) %>%
+  ggplot(aes(x = temp_feel, y = rides)) +
+    geom_line(aes(y = .value, group = .draw), alpha = 0.15) + 
+    geom_point(data = bikes, size = 0.05) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw()
+```
+</center>
+
+
+## Working Example
+
+- We will examine Australian weather from the `weather_WU` data in the `bayesrules` package. 
+    - This data contains 100 days of weather data for each of two Australian cities: Uluru and Wollongong.
+    
+```{r}
+data(weather_WU)
+head(weather_WU)
+```
+
+## Working Example
+
+- Let's keep only the variables on afternoon temperatures (`temp3pm`) and a subset of possible predictors that we'd have access to in the morning:
+
+```{r}
+weather_WU <- weather_WU %>% 
+  select(location, windspeed9am, humidity9am, pressure9am, temp9am, temp3pm)
+head(weather_WU)
+```
+
+## Working Example
+
+- We begin our analysis with the familiar: a simple Normal regression model of `temp3pm` with one quantitative predictor, the morning temperature `temp9am`, both measured in degrees Celsius.
+
+<center>
+```{r}
+ggplot(weather_WU, aes(x = temp9am, y = temp3pm)) +
+  geom_point(size = 0.2) + 
+  theme_bw()
+```
+</center>
+
+## Working Example
+
+- Let's model the 3 pm temperature as a function of the 9 am temperature on a given day $i$.
+    - Outcome: $Y_i$ = 3 pm temp
+    - Predictor: $X_{i1}$ = 9 am temp
+    
+- Then, we can model it using the Bayesian normal regression model,
+
+$$
+\begin{align*}
+Y_i | \beta_0, \beta_1, \sigma &\overset{\text{ind}}{\sim} N(\mu_i, \sigma^2), \text{ with } \mu_i = \beta_0 + \beta_1 X_{i1} \\
+\beta_{0c} &\sim N(25, 5^2) \\
+\beta_1 &\sim N(0,3.1^2) \\
+\sigma & \sim \text{Exp}(0.13)
+\end{align*}
+$$
+
+- Note that we are using the centered intercept as 0 degree mornings are rare in Australia.
+
+## Working Example
+
+- Simulating this model,
+
+```{r}
+weather_model_1 <- stan_glm(
+  temp3pm ~ temp9am, 
+  data = weather_WU, family = gaussian,
+  prior_intercept = normal(25, 5),
+  prior = normal(0, 2.5, autoscale = TRUE), 
+  prior_aux = exponential(1, autoscale = TRUE),
+  chains = 4, iter = 5000*2, seed = 84735)
+```
+
+## Working Example
+
+- Note that we asked `stan_glm()` to *autoscale* our priors. What did it change them to?
+
+```{r}
+prior_summary(weather_model_1)
+```
+
+## Working Example
+
+<center>
+```{r}
+mcmc_trace(weather_model_1, size = 0.1)
+```
+</center>
+
+## Working Example
+
+<center>
+```{r}
+mcmc_dens_overlay(weather_model_1)
+```
+</center>
+
+## Working Example
+
+```{r}
+posterior_interval(weather_model_1, prob = 0.80)
+```
+
+- 80% credible interval for $\beta_1$: (0.98, 1.10)
+
+- 80% credible interval for $\sigma$: (3.87, 4.41)
+
+## Working Example
+
+<center>
+```{r}
+pp_check(weather_model_1)
+```
+</center>
+
+## Categorical Predictors
+
+- What if we look at the data by location?
+
+<center>
+```{r}
+ggplot(weather_WU, aes(x = temp3pm, fill = location)) + 
+  geom_density(alpha = 0.5) + theme_bw()
+```
+</center>
+
+- We should probably look at location as a predictor...
+
+## Categorical Predictors
+
+- Let's let $X_{i2}$ be an indicator for the location,
+
+$$
+X_{i2} =
+\begin{cases}
+1 & \text{Wollongong} \\
+0 & \text{otherwise (i.e., Uluru).}
+\end{cases}
+$$
+
+- We are treating "not-Wollongong" as our reference group -- in this case, it is Uluru.
+
+$$
+\begin{array}{rl}
+\text{data:} & Y_i \mid \beta_0, \beta_1, \sigma \overset{\text{ind}}{\sim} N(\mu_i, \sigma^2) \quad \text{with} \quad \mu_i = \beta_0 + \beta_1 X_{i2} \\
+\text{priors:} & \beta_{0c} \sim N(25, 5^2) \\
+& \beta_1 \sim N(0, 38^2) \\
+& \sigma \sim \text{Exp}(0.13).
+\end{array}
+$$
+
+## Categorical Predictors
+
+- Let's think about our model.
+
+$$y = \beta_0 + \beta_1 x_2$$
+
+- What do our coefficients mean?
+    - $\beta_0$ is the typical 3 pm temperature in Uluru ($x_2=0$).
+    - $\beta_1$ is the typical difference in 3 pm temperature in Wollongong ($x_2=1$) as compared to Uluru ($x_2=0$).
+    - $\sigma$ represents the standard deviation in 3 pm temperatures in Wollongong and Uluru.
+
+## Categorical Predictors
+
+- Let's think about our model.
+
+$$y = \beta_0 + \beta_1 x_2$$
+
+- $\beta_1$ is the typical difference in 3 pm temperature in Wollongong ($x_2=1$) as compared to Uluru ($x_2=0$).
+
+- When we use a binary predictor, this results in two models, effectively. 
+    - One when $x_1=0$ (Uluru) and one when $x_1=1$ (Wollongong).
+
+$$
+\begin{align*}
+y = \beta_0 + \beta_1 x_2 \to \text{(U)} \ y &= \beta_0 \\
+\text{(W)} \ y&=  \beta_0+\beta_1
+\end{align*}
+$$
+
+## Categorical Predictors
+
+- Let's simulate our posterior using weakly informative priors,
+
+```{r}
+#| results: "hide"
+weather_model_2 <- stan_glm(
+  temp3pm ~ location,
+  data = weather_WU, family = gaussian,
+  prior_intercept = normal(25, 5),
+  prior = normal(0, 2.5, autoscale = TRUE), 
+  prior_aux = exponential(1, autoscale = TRUE),
+  chains = 4, iter = 5000*2, seed = 84735)
+```
+
+## Categorical Predictors
+
+<center>
+```{r}
+mcmc_trace(weather_model_2, size = 0.1)
+```
+</center>
+
+## Categorical Predictors
+
+<center>
+```{r}
+mcmc_dens_overlay(weather_model_2)
+```
+</center>
+
+## Categorical Predictors
+
+- Looking at the posterior summary,
+
+```{r}
+tidy(weather_model_2, effects = c("fixed", "aux"),
+     conf.int = TRUE, conf.level = 0.80) %>% 
+  select(-std.error)
+```
+
+## Categorical Predictors
+
+- We can also look at the temperatures by location,
+
+<center>
+```{r}
+#| echo: false
+as.data.frame(weather_model_2) %>% 
+  mutate(uluru = `(Intercept)`, 
+         wollongong = `(Intercept)` + locationWollongong) %>% 
+  mcmc_areas(pars = c("uluru", "wollongong"))
+```
+</center>
+
+## Multiple Predictors
+
+- What if we want to include multiple predictors?
+    - Notice in the code, our model now has multiple predictors (`temp9am` and `location`).
+    - Here, we are simulating the *prior* - this will allow us to graphically examine what we are claiming with the priors.
+
+```{r}
+#| eval: false
+weather_model_3_prior <- stan_glm(
+  temp3pm ~ temp9am + location,
+  data = weather_WU, family = gaussian, 
+  prior_intercept = normal(25, 5),
+  prior = normal(0, 2.5, autoscale = TRUE), 
+  prior_aux = exponential(1, autoscale = TRUE),
+  chains = 4, iter = 5000*2, seed = 84735,
+  prior_PD = TRUE)
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| results: "hide"
+weather_model_3_prior <- stan_glm(
+  temp3pm ~ temp9am + location,
+  data = weather_WU, family = gaussian, 
+  prior_intercept = normal(25, 5),
+  prior = normal(0, 2.5, autoscale = TRUE), 
+  prior_aux = exponential(1, autoscale = TRUE),
+  chains = 4, iter = 5000*2, seed = 84735,
+  prior_PD = TRUE)
+```
+
+## Multiple Predictors
+
+<center>
+```{r}
+#| echo: false
+
+set.seed(84735)
+a <- weather_WU %>%
+  add_predicted_draws(weather_model_3_prior, n = 100) %>%
+  ggplot(aes(x = .prediction, group = .draw)) +
+    geom_density() + 
+    xlab("temp3pm") + theme_bw()
+
+b <- weather_WU %>%
+  add_fitted_draws(weather_model_3_prior, n = 100) %>%
+  ggplot(aes(x = temp9am, y = temp3pm, color = location)) +
+    geom_line(aes(y = .value, group = paste(location, .draw))) + theme_bw()
+
+library(ggpubr)
+ggarrange(a, b, ncol=2)
+```
+</center>
+
+- From the simulated priors,
+    - We can look at different sets of 3 p.m. temperature data (left graph).
+        
+## Multiple Predictors
+
+<center>
+```{r}
+#| echo: false
+
+set.seed(84735)
+a <- weather_WU %>%
+  add_predicted_draws(weather_model_3_prior, n = 100) %>%
+  ggplot(aes(x = .prediction, group = .draw)) +
+    geom_density() + 
+    xlab("temp3pm") + theme_bw()
+
+b <- weather_WU %>%
+  add_fitted_draws(weather_model_3_prior, n = 100) %>%
+  ggplot(aes(x = temp9am, y = temp3pm, color = location)) +
+    geom_line(aes(y = .value, group = paste(location, .draw))) + theme_bw()
+
+library(ggpubr)
+ggarrange(a, b, ncol=2)
+```
+</center>
+
+- From the simulated priors,
+    - We can also look at our prior assumptions about the relationship between 3 p.m. and 9 a.m. temperature at each location (right graph).
+        - Our prior is vague; we're not sure of the relationship!
+
+## Multiple Predictors
+
+- Instead of starting the `stan_glm()` syntax from scratch, we can `update()` the `weather_model_3_prior` by setting `prior_PD = FALSE`:
+
+```{r}
+weather_model_3 <- update(weather_model_3_prior, prior_PD = FALSE)
+```
+
+## Multiple Predictors
+
+- The simulation results in 20,000 posterior plausible relationships between temperature and location.
+
+- You try the following code:
+
+<center>
+```{r}
+#| eval: false
+weather_WU %>%
+  add_fitted_draws(weather_model_3, n = 100) %>%
+  ggplot(aes(x = temp9am, y = temp3pm, color = location)) +
+    geom_line(aes(y = .value, group = paste(location, .draw)), alpha = .1) +
+    geom_point(data = weather_WU, size = 0.1) +
+  theme_bw()
+```
+</center>
+
+## Multiple Predictors
+
+<center>
+```{r}
+#| echo: false
+weather_WU %>%
+  add_fitted_draws(weather_model_3, n = 100) %>%
+  ggplot(aes(x = temp9am, y = temp3pm, color = location)) +
+    geom_line(aes(y = .value, group = paste(location, .draw)), alpha = .1) +
+    geom_point(data = weather_WU, size = 0.1) +
+  theme_bw()
+```
+</center>
+
+- 3 p.m. temperature is positively associated with 9 a.m. temperature and tends to be higher in Uluru than in Wollongong. 
+
+- Further, relative to the prior simulated relationships in Figure 11.9, these posterior relationships are very consistent 
+
+## Multiple Predictors
+
+- Looking at the posterior summary statistics,
+
+```{r}
+tidy(weather_model_3, effects = c("fixed", "aux"),
+     conf.int = TRUE, conf.level = 0.80) %>% 
+  select(-std.error)
+```
+
+## Multiple Predictors
+
+- You try! Run the following code to look at our posterior predictive models.
+
+<center>
+```{r}
+#| eval: false
+# Simulate a set of predictions
+set.seed(84735)
+temp3pm_prediction <- posterior_predict(
+  weather_model_3,
+  newdata = data.frame(temp9am = c(10, 10), 
+                       location = c("Uluru", "Wollongong")))
+
+# Plot the posterior predictive models
+mcmc_areas(temp3pm_prediction) +
+  ggplot2::scale_y_discrete(labels = c("Uluru", "Wollongong")) + 
+  xlab("temp3pm")
+```
+</center>
+
+## Multiple Predictors
+
+<center>
+```{r}
+#| echo: false
+
+# Simulate a set of predictions
+set.seed(84735)
+temp3pm_prediction <- posterior_predict(
+  weather_model_3,
+  newdata = data.frame(temp9am = c(10, 10), 
+                       location = c("Uluru", "Wollongong")))
+
+# Plot the posterior predictive models
+mcmc_areas(temp3pm_prediction) +
+  ggplot2::scale_y_discrete(labels = c("Uluru", "Wollongong")) + 
+  xlab("temp3pm")
+```
+</center>
+
+- Roughly speaking, we can anticipate 3 p.m. temperatures between 15 and 25 degrees in Uluru, and cooler temperatures between 8 and 18 in Wollongong.
+
+## Wrap Up
+
+- Today, we have learned about regression (under the normal distribution) in the Bayesian framework.
+    
+- Wednesday: Evaluating the Model
+    
+- Project stuff:
+    - EES students should have their data <u>this week</u>
+        - Dr. Seals and Dr. Schmutz will review before passing to Bayesian students.
+        
+- Next week:
+    - Monday: Binary logistic and Poisson regressions.
+    - Wednesday: How to "read" (non-statistical) research papers.
+    
+## Practice / Homework
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 9.9, 9.10, 9.11, 9.12
+    - 9.16, 9.17, 9.18    

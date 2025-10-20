@@ -1,0 +1,156 @@
+---
+title: "Assignment 2: Bayesian Inference"
+author: "Your Name Here"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  html:
+    df-print: paged
+    self-contained: true
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+
+All data for this project can be found here: [Google Sheets](https://docs.google.com/spreadsheets/d/1kPPFOZvFzYSi4THhcQC_xMTrTB2WLsH7ll2Cw8xm_Ig/edit?gid=0#gid=0)
+
+**1. Belle has taken over the castle's grand library and is determined to restore its warm, welcoming glow. The enchanted lanterns are meant to light automatically each evening, but ever since the enchantress's curse, not all of them behave reliably.**
+
+**From past experience, Lumière estimates that somewhere between 50% and 70% of the lanterns light properly on any given night. When he is pressed for a single (point) estimate, he says that about 60% of the lanterns light properly. However, Belle suspects that things are improving as the castle’s magic grows stronger... perhaps the true proportion of working lanterns is now higher?**
+
+**To test this, she records data for a week evenings. Each night, she notes how many of the 10 enchanted lanterns successfully light when the sun sets.**
+
+**1a. What modeling approach is appropriate for this scenario? Explain why.**
+
+Insert your answer here.
+
+**1b. Find an appropriate prior given the information provided. Justify your choice.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**1c. Find the posterior distribution in light of the observed data.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**1d. Construct the appropriate hypothesis test (in the Bayesian framework) to determine if the proportion of lanterns that successfully light has increased.**
+
+```{r}
+
+```
+
+- **Hypotheses:**
+    - $H_0:$
+    - $H_1:$
+
+- **Decision information:**
+    - Prior probabilities:
+        - Prior odds:
+    - Posterior probabilities:
+        - Posterior odds:
+    - Bayes Factor:
+    - 95% credible interval:
+
+- **Conclusion and interpretation:**
+
+**2. As the castle's magic returns, Cogsworth has been busy ensuring that every enchanted clock in the west wing ticks properly. Each evening, he listens carefully for the number of clocks that chime on time during the first hour after sunset.**
+
+**Before Belle's arrival, the castle staff believed that the average number of properly chiming clocks per hour was around 5, but they are not too confident about that estimate. However, as the curse weakens, Cogsworth suspects the clocks are performing better than before. To check, he records data over seven evenings.**
+
+**2a. What modeling approach is appropriate for this scenario? Explain why.**
+
+Insert your answer here.
+
+**2b. Find an appropriate prior given the information provided. Justify your choice.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**2c. Find the posterior distribution in light of the observed data.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**2d. Construct the appropriate hypothesis test (in the Bayesian framework) to determine if the number of clocks that properly chime has increased.**
+
+```{r}
+
+```
+
+- **Hypotheses:**
+    - $H_0:$
+    - $H_1:$
+
+- **Decision information:**
+    - Prior probabilities:
+        - Prior odds:
+    - Posterior probabilities:
+        - Posterior odds:
+    - Bayes Factor:
+    - 95% credible interval:
+    
+- **Conclusion and interpretation:**
+
+**3. Mrs. Potts prides herself on brewing tea at just the right temperature: not too hot to startle a guest, not too cool to lose its charm. She believes that when the castle's magic was weaker, the average serving temperature of her enchanted teapot's pours was about 85°C, with a standard deviation of about 3°C.**
+
+**Now that the curse has nearly lifted, Mrs. Potts suspects her tea is coming out hotter on average. To investigate, she measures the temperature (in °C) of her pours over seven evenings.**
+
+**3a. What modeling approach is appropriate for this scenario? Explain why.**
+
+Insert your answer here.
+
+**3b. Find an appropriate prior given the information provided. Justify your choice.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**3c. Find the posterior distribution in light of the observed data.**
+
+```{r}
+
+```
+
+Insert your answer here.
+
+**3d. Construct the appropriate hypothesis test (in the Bayesian framework) to determine if the tea is hotter when poured.**
+
+```{r}
+
+```
+
+- **Hypotheses:**
+    - $H_0:$
+    - $H_1:$
+
+- **Decision information:**
+    - Prior probabilities:
+        - Prior odds:
+    - Posterior probabilities:
+        - Posterior odds:
+    - Bayes Factor:
+    - 95% credible interval:
+    
+- **Conclusion and interpretation:**
+
