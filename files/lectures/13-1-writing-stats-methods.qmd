@@ -1,0 +1,337 @@
+---
+title: "Writing about Statistical Methods"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## The Methods Section
+
+- Overall, the methods section of a paper includes relevant project details such that the study can be replicated.
+    - Replication for both the subject-matter expert *and* the person performing data analysis.
+
+- The subsections we expect to contribute the most to:
+    - Data Management (*optional section*)
+    - Statistical Analysis
+    - Supplementary/Appendix Materials (*optional section*)
+
+## Data Wrangling
+
+- The data wrangling portion of the methods section should outline how the analysis dataset was created from the raw dataset(s).
+    - **This** is why I maintain that we should do *all* data management with programming -- we have a record of *everything*, from start to finish.
+
+- Inclusion/exclusion criteria should be outlined.    
+    - "Participants with missing data on key covariates were excluded from analysis."
+    - "The analysis data was restricted to those in the 'first time in college' cohort."
+
+- Creation of new variables should be outlined.
+    - "Hypertension was defined as systolic blood pressure > 140, diastolic blood pressure > 90, or use of antihypertensive medications."
+    
+
+## Order Matters
+
+- List methodology in the order in which results are presented.
+
+- Typically the order is:
+    - Descriptive statistics (Table 1)
+    - Research Question 1 (e.g., Table 2)
+    - Research Question 2 (e.g., Table 3)
+    - ....
+    - Software utilized 
+        - Data management
+        - Statistical analysis
+        - Graphing
+    - *A priori* significance level    
+        
+## Appearance in Paper Matters        
+    
+- If a table/graph (or analysis) is not discussed in the paper, **it should not be included in the paper**.
+
+- This also extends to the methods section: **we only describe methods that are used in the paper**.
+
+## Table 1 
+
+- Table 1 (descriptives)
+    - Descriptive statistics are shown as [mean/median] ([standard deviation/IQR]) for continuous variables or n (%) for categorical variables.
+        - These tables are sometimes split by grouping variables.
+        - If comparing groups in your Table 1, indicate what test(s) were used to compare the groups.
+        - Note: there is some debate about using *p*-values in Table 1... but the idea is to show the audience what differences may or may not exist.
+        
+## Tables 2 and Beyond 
+
+- The tables included after Table 1 typically correspond to research questions/hypotheses.
+
+- For each table, indicate what outcome was modeled, what method was used to model it, and any relevant notes about the modeling.
+    - Were any transformations used?
+    - Were any covariates adjusted for? 
+        - Only necessary to note when tables showing model results exclude adjustors.
+    - Were assumptions met?
+        - Normality of residuals & equal variances
+        - Proportional odds or hazards
+        - Multicollinearity
+        
+## Tables 2 and Beyond 
+
+- The tables included after Table 1 typically correspond to research questions/hypotheses.
+
+- We also want to explicitly state how the results are displayed in the tables. 
+    - My preference: the coefficient *as we will interpret it* and its corresponding 95% CI.
+        - Normal: $\hat{\beta}$ (95% CI)
+        - Gamma: $\exp\{\hat{\beta}\}$ (95% CI)
+        - Logistic: Odds Ratio (95% CI)
+        - Poisson: Incidence Rate Ratio (95% CI)
+        - Cox: Hazard Ratio (95% CI)
+
+## The Technical "Details"
+
+- Finally, we include technical details about how the data was handled during the analysis.
+
+- We always state (and cite) the software used to produce information for the paper.
+    - Yes, sometimes I use different programs for data management, statistical analysis, and graphing....
+
+- Every software has its preferences on how use should be cited in papers.
+    - SAS software, version [version number] (SAS Institute, Cary, NC).
+    - Stata statistical software, release [release number] (StataCorp, College Station, Texas).
+    - R version [version number] (R Foundation for Statistical Computing, Vienna, Austria).
+    
+## The Technical "Details"
+
+- YES, we will cite the packages used in addition to base R!
+    - This is the <u>nice thing to do</u> -- we recognize those that made our lives easier with programming. 
+    - But also, this is how developers (academic) can quantify and demonstrate the usefulness of their contributions to the R community (for annual evaluation purposes).
+    
+- For base R:
+
+```{r}
+#| eval: false
+citation()
+```
+
+- For packages:
+    
+```{r}
+#| eval: false
+citation("package_name")
+```
+
+## The Technical "Details"
+
+```{r}
+citation()
+```
+
+## The Technical "Details"
+    
+```{r}
+citation("tidyverse")
+```
+
+## The Technical "Details"
+    
+```{r}
+citation("bayesrules")
+```
+
+## The Technical "Details"
+
+- Finally (finally!), we should state the *a priori* significance level if we are analyzing under the frequentist framework.
+
+- If we are analyzing under the Bayesian framework, that will be obvious when we describe our modeling approach.
+
+## Example 1: Table 1 {.center}
+
+![](images/ex1-a.png){width=80% fig-align="center"}
+
+- Descriptive data are shown as median (range) or $n$ (%), as appropriate. <font color = "#E0218A">*What numbers are shown in the cells of the table?*</font>
+
+- Continuous variables were compared using the Kruskal-Wallis test. Categorical variables were compared using the $\chi^2$ or Fisher's exact tests, as appropriate. <font color = "#E0218A">*How were p-values generated?*</font>
+
+## Example 1: Table 2+ {.center}
+
+![](images/ex1-b.png){width=80% fig-align="center"}
+
+- Hospital mortality and use of extracorporeal membrane oxygenation were modeled using logistic regression. <font color = "#E0218A">*What outcomes were modeled and how?*</font>
+
+## Example 1: Table 2+ {.center}
+
+![](images/ex1-b.png){width=80% fig-align="center"}
+
+- Regression results are shown as odds ratio (95% confidence interval; CI). <font color = "#E0218A">*What are in the cells of the table?*</font>
+
+## Example 1: Table 2+ {.center}
+
+![](images/ex1-b.png){width=80% fig-align="center"}
+
+- Significance of predictors was assessed using the omnibus Wald $\chi^2$ test. When appropriate, pairwise comparisons were made using the Bonferroni adjustment. <font color = "#E0218A">*How were p-values generated/evaluated?*</font>
+
+## Example 1: Table 2+ {.center}
+
+![](images/ex1-b.png){width=80% fig-align="center"}
+
+- <font color = "#E0218A">*Note the informative footnote!*</font>
+
+    - <font color = "#E0218A">*I try to include information in footnotes as a reminder for the reader.*</font>
+
+## Example 1: Pulled together
+
+- Descriptive data are shown as median (range) or $n$ (%), as appropriate. Continuous variables were compared using the Kruskal-Wallis test. Categorical variables were compared using the $\chi^2$ or Fisher's exact tests, as appropriate. 
+
+- Hospital mortality and use of extracorporeal membrane oxygenation were modeled using logistic regression. Regression results are shown as odds ratio (95% confidence interval; CI). Significance of predictors was assessed using the omnibus Wald $\chi^2$ test. When appropriate, pairwise comparisons were made using the Bonferroni adjustment. 
+
+- Data management and analysis were performed using SAS software, Version 9.3 (SAS Institute, Inc., Cary, NC). *A priori* significance was defined as *p* < 0.05.
+
+## Example 2: Table 2+ {.center}
+
+![](images/ex2-a.png){width=80% fig-align="center"}
+
+- <font color = "#E0218A">*Sometimes we decide to show results for a subset of predictors.*</font>
+
+## Example 2: Table 2+ {.center}
+
+![](images/ex2-b.png){width=80% fig-align="center"}
+
+- <font color = "#E0218A">*We just need to make sure that information is noted somewhere.*</font>
+
+    - <font color = "#E0218A">*Although the information is in the footnote, the models being compared/contrasted must be clearly outlined in the methods section.*</font>
+
+## Example 3: Table 2+ {.center}
+
+![](images/ex3-a.png){width=80% fig-align="center"}
+
+- Correlations between covariates at initial survey were assessed using Spearman's correlation. <font color = "#E0218A">*What method was used to assess correlations?*</font>
+
+## Example 3: Table 2+ {.center}
+
+![](images/ex3-b.png){width=80% fig-align="center"}
+
+- <font color = "#E0218A">*Let's take a look at the table description and footnotes...*</font>
+
+
+## Example 3: Table 2+ {.center}
+
+![](images/ex3-b.png){width=80% fig-align="center"}
+
+- Hierarchical linear models (HLM) were used when modeling all outcomes of interest. First, the models had only sex, type of SCD, and the baseline sleep quality score as predictors. Then, the models were further ajdusted for depression score. Finally, the models were further adjusted for pain frequency, intensity, and interference. Because all HLM incrementally increased the *R*^2^ value, only the fully adjusted models are shown. 
+
+## Example 3: Table 2+ {.center}
+
+![](images/ex3-b.png){width=80% fig-align="center"}
+
+- Sleep quality and age appropriate sleep were modeled using binary logistic regression while sleep duration was modeled using ordinary least squares regression. Regression results are shown as odds ratio (95% confidence interval; CI) for logistic regression and unstandardized beta coefficients (95% CI) for linear regression. Significance of predictors was assessed using the omnibus Wald $\chi^2$ test for categorical predictors. As necessary, pairwise comparisons were made using the Bonferroni adjustment.
+
+## Example 4: Supplementary Materials 
+
+- Sometimes, we have additional analyses that are not central to the main results and can be cut from the main body of the paper for either space or interpretability purposes.
+    - sensitivity analysis
+    - full model results, including results from adjustors
+    - recoding during data management (e.g., collapsing categories)
+    
+- Example of recently-published supplement: [click here](https://content.cld.iop.org/journals/0031-9120/60/2/025023/revision1/pedadaffasupp1.pdf?Expires=1762152647&Signature=VTgNBRN7FM6iG5s3vR06nsM8E2ECFuVIwSTjTeey-zhDLlHFCyg-AnGeo6tHjiq8LIih1NrSOditsIujr-2reWEm3eAO9duPmiaGGB3cjjDTluxshG2~9rt6IpXiSc-7nuaFzLjNPCGQfUp07xk76Llqgx~Ou2oLjQgMvPxTWCGtfRaril79Kz8w-zYXfb9flx7gJC7x0MusHQPCXAYZC4rNY2tb4Fd97eT3s-Kho1OoI2nhTXAP4MmT465eGR6sXJK904GhO8-jc5TUYz7SnshFSma3vUbabPjdt0Ds~UkEDorBI~xze5foy0cN5B62I7HFTem92SSgygwSWsCuEQ__&Key-Pair-Id=KL1D8TIY3N7T8).
+
+## Example 4: Supplementary Materials 
+    
+- Example of recently-published supplement: [click here](https://content.cld.iop.org/journals/0031-9120/60/2/025023/revision1/pedadaffasupp1.pdf?Expires=1762152647&Signature=VTgNBRN7FM6iG5s3vR06nsM8E2ECFuVIwSTjTeey-zhDLlHFCyg-AnGeo6tHjiq8LIih1NrSOditsIujr-2reWEm3eAO9duPmiaGGB3cjjDTluxshG2~9rt6IpXiSc-7nuaFzLjNPCGQfUp07xk76Llqgx~Ou2oLjQgMvPxTWCGtfRaril79Kz8w-zYXfb9flx7gJC7x0MusHQPCXAYZC4rNY2tb4Fd97eT3s-Kho1OoI2nhTXAP4MmT465eGR6sXJK904GhO8-jc5TUYz7SnshFSma3vUbabPjdt0Ds~UkEDorBI~xze5foy0cN5B62I7HFTem92SSgygwSWsCuEQ__&Key-Pair-Id=KL1D8TIY3N7T8).
+
+- The original rule still applies, though: if there is no mention of it in the paper, it should not be included in the supplementary materials.
+    - e.g., Likert-scale questions were condensed into three categories: agree, neutral, and disagree. Full details on the recoding process, including summary statistics, are shown in Appendix A.
+    - e.g., Results shown in Table 2 focus on the primary predictors of interest. Full model results, including adjustors, are shown in Appendix B.
+
+## Example 5: Writing *More* About Methods
+
+- Depending on the field, more information about methods may be necessary to help the reader interpret the results. Consider this graph:
+
+![](images/ex4-f.png){width=80% fig-align="center"}
+
+## Example 5: Writing *More* About Methods
+
+- What did the resulting statistical methods section look like?
+
+::: {.columns}
+::: {.column width="33%"}
+![](images/ex4-a.png){width=100% fig-align="center"}
+:::
+::: {.column width="33%"}
+![](images/ex4-b.png){width=100% fig-align="center"}
+:::
+::: {.column width="33%"}
+![](images/ex4-c.png){width=100% fig-align="center"}
+
+![](images/ex4-d.png){width=100% fig-align="center"}
+:::
+:::
+
+## Example 5: Writing *More* About Methods
+
+- Why are we talking about this? (Adding details for interpretations.)
+
+- You will be expected to provide basic examples of how to interpret coefficients in the model(s) you are using in this analysis.
+
+- Again, only include what is necessary to understand the results.
+    - Goal: give the reader the background necessary to understand what they're looking at.
+    - Actual goal: **reproducibility!**
+
+## Other Notes
+
+- When working with others & disagreeing on what should be included, I will ask myself, "is this my hill to die on?"
+    
+- Battles I have won:
+    - "Multivariable" vs. "Multivariate"
+    - Including interval estimates in tables
+    - Including *p*-values in Table 1
+    
+- Battles I have not won:
+    - "Multivariable" vs. "Multivariate"
+    - Including interval estimates in tables
+    - Including *p*-values in Table 1
+    
+- Actual hill to die on: posthoc power analysis ([1](https://www.jrheum.org/content/jrheum/early/2022/05/10/jrheum.211115.full.pdf), [2](https://www.reddit.com/r/AskStatistics/comments/f8klux/post_hoc_power_analysis_wtf/)).
+
+## Other Notes
+
+- I <u>do not</u> write this section until after the results section is finalized and/or I know exactly what tables and graphs are being included in the paper.
+
+- Note that generally, tables take the same appearance. I make sure we are consistent with how results are displayed across tables in a paper, which also helps with writing the methods section.
+    - Think: your brand in science.
+    
+- However, sometimes a journal has requirements for tables. Fields have different ways they present model results.
+    - My approach: check target journal guidelines; look at recent papers in target journal to see if there is a common theme for tables of results.
+    
+## Wrap Up
+
+- Today we have talked about the basics of writing a statistical methods section corresponding to the analysis you performed.
+
+- While this discussion is in the academic context, you can still employ these methods outside of academic papers:
+    - Think of this as leaving yourself (or your colleagues) notes on how the analysis was performed.
+    - Again, our real goal here is to make our analyses **reproducible**.
+    
+## Upcoming Schedule
+
+- Wednesday:
+    - Everyone will give a 3 minute presentation of their results.
+
+- Next deliverables:
+    - Methods section first draft (November 23).
+    - Tables and Graphs (November 23)
+    
+- Reminder 1! No class next week (Thanksgiving holiday).
+- Reminder 2! No formal meetings the week after.
+    - Monday (December 1): meet with EES collaborator.
+    - Wednesday (December 3): work on final draft of research; Dr. Seals available by appointment during class time.
+    

@@ -1,0 +1,399 @@
+---
+title: "Evaluating Regression Models"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction
+
+- We want to now learn how to evaluate *how good* our regression model is.
+
+- How fair is the model?
+
+    - How was the data collected?
+    - By whom and for what purpose?
+    - How might the results of the data collection or analysis impact individuals and society?
+    - What biases might be baked into the analysis?
+    
+## Introduction
+
+- We want to now learn how to evaluate *how good* our regression model is.
+
+- How wrong is the model?
+
+    - "All models are wrong, but some are useful." - George E.P. Box
+    - Are our assumptions reasonable?
+    
+- How accurate are the posterior predictive models?
+
+    - How far are the posterior predictive models from reality?    
+
+---
+
+<center><img src = "images/box.png"></center>   
+
+## Is the Model Fair?
+
+- Consider our example from last lecture, the Capital Bikeshare data.
+
+- We simulated under the following model:
+
+$$
+\begin{align*}
+Y_i | \beta_0, \beta_1, \sigma &\overset{\text{ind}}{\sim} N(\beta_0 + \beta_1X_i,\sigma^2) \\
+\beta_{0\text{c}} &\sim N(5000, 1000^2) \\
+\beta_{1\text{c}} &\sim N(100, 40^2) \\
+\sigma &\sim \text{Exp}(0.0008)
+\end{align*}
+$$
+
+## Is the Model Fair?
+
+- Consider our example from last lecture, the Capital Bikeshare data.
+
+- **How was the data collected?**
+
+    - It is reasonable to assume that this was collected electronically.
+    - We do not have individual-level information, only aggregated ride data.
+
+- **By whom and for what purpose was the data collected?**
+
+    - It is reasonable for a bike sharing company to track data such as number of rides in a day.
+    - The company is likely doing this to make evidence-based business decisions.
+    
+## Is the Model Fair?
+
+- Consider our example from last lecture, the Capital Bikeshare data.    
+
+- **How might the results of the analysis, or the data collection itself, impact individuals and society?**
+
+    - Because there is no individual-level information, this will not negatively impact customers.
+    - Improving the service might help reduce car traffic in D.C. - this is good!
+    
+- Note!
+
+    - Just because we cannot imagine societal impacts does not mean that none exist.
+    - It's critical to recognize our perspective based on our experiences.
+    - How can we truly determine the impacts? 
+        - We would need to engage with the company and its community.
+    
+## Is the Model Fair?
+
+- **What biases might be baked into this analysis?**
+
+    - The data is only for one company. 
+        - Other bikeshare companies may have different usage patterns.
+    - The data is only for one city. 
+        - Other cities may have different usage patterns for bikeshare.
+        - Other cities will have different weather patterns. 
+
+## Is the Model Fair?
+
+- **How do I approach thinking about bias in analysis?**
+
+    - Who is and is not represented in the data?
+    - What assumptions were made about the data?
+    - What assumptions are made about the truth/the population?
+    - Is the analysis method appropriate for the question posed?
+        - e.g., did they use logistic regression for a binary outcome?
+    - Were there any "reaching" assumptions made in order to complete the analysis?
+        - e.g., assuming data is MCAR when it is likely MAR or MNAR.
+        - e.g., assuming independent observations when there is likely correlation.
+    - Are the results stated appropriately? (vs. overstated)
+        - Are broad, sweeping generalizations made from a narrow dataset?
+        
+## How Wrong is the Model?
+
+- Recall the data model,
+
+$$
+Y_i | \beta_0, \beta_1, \sigma \overset{\text{ind}}{\sim} N(\beta_0 + \beta_1X_i,\sigma^2) 
+$$
+
+- What are the assumptions on our model?
+
+    - The observed data, $Y_i$, is independent of other observed data, $Y_j$ for $i \neq j$.
+    - $Y$ can be written as a linear function of $X$, $\mu=\beta_0 + \beta_1 X$.
+    - At any $X$, $Y$ varys normally around $\mu$ with consistent variability, $\sigma$.
+    
+## How Wrong is the Model?
+    
+- **The observed data, $Y_i$, is independent of other observed data, $Y_j$ for $i \neq j$.**
+
+    - We can technically test for this, but it is not often employed by statisticians.
+    - Instead, we rely on knowledge of the data collection process.
+    - If the data collection process suggests dependence, we should consider a different model.
+        - e.g., a modeling approach that will account for the correlation between observations.
+
+## How Wrong is the Model?
+    
+- **The observed data, $Y_i$, is independent of other observed data, $Y_j$ for $i \neq j$.**
+
+- In this example, the data are daily counts of bike rides.
+
+    - There is inherently some correlation -- the ridership today is likely correlated to the ridership yesterday.
+    - However, this can be explained by the time of year and features associated with the time of year, like temperature. 
+    - We should ask ourselves if it's reasonable to assume that the temperature cancels out the time correlation.
+    
+- **"Reasonable" <u>does not</u> mean "perfect," but instead, "good enough to proceed."**
+
+## How Wrong is the Model?
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+library(bayesplot)
+library(broom.mixed)
+library(rstanarm)
+data(bikes)
+```
+
+- Returning to our bike data, we can look at the scatterplot of temperature ($X$) and number of rides ($Y$).
+    - What kind of relationship do we suspect?
+
+```{r}
+#| fig-align: 'center'
+#| echo: false
+bikes %>% ggplot(aes(y = rides, x = temp_feel)) + 
+  geom_point(size = 2) + 
+  theme_bw() +
+  labs(x = "Temperature (°F)",
+       y = "Number of Rides")
+```
+
+
+## How Wrong is the Model?
+
+- We can overlay a line of best fit using `geom_smooth(method = "lm")`.
+
+```{r}
+#| fig-align: 'center'
+#| echo: false
+bikes %>% ggplot(aes(y = rides, x = temp_feel)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(x = "Temperature (°F)",
+       y = "Number of Rides") 
+```
+
+## How Wrong is the Model?
+
+- Or we can overlay a locally estimated scatterplot smoothing (LOESS) line using `geom_smooth()`.
+
+```{r}
+#| fig-align: 'center'
+#| echo: false
+bikes %>% ggplot(aes(y = rides, x = temp_feel)) + 
+  geom_point(size = 2) + 
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  labs(x = "Temperature (°F)",
+       y = "Number of Rides")
+```
+
+## How Wrong is the Model?
+
+- How different are the two lines?
+
+```{r}
+#| fig-align: 'center'
+#| echo: false
+bikes %>% ggplot(aes(y = rides, x = temp_feel)) + 
+  geom_point(size = 2, color = "gray") + 
+  geom_smooth(method = "lm", se = FALSE, color = "black", linewidth=2) +
+  geom_smooth(se = FALSE, color = "blue", linewidth=1) +
+  theme_bw() +
+  labs(x = "Temperature (°F)",
+       y = "Number of Rides")
+```
+
+## How Wrong is the Model?
+
+- When does "visualization" suggest that a linear model is not appropriate?
+
+    - Does the LOESS line deviates substantially from the linear line?
+    - Here, we see that the LOESS line is fairly close to the linear line.
+    - Thus, it is reasonable to assume a linear relationship between $X$ and $Y$.
+
+- Are there "issues" with this approach?
+
+    - When we have more than one predictor, yes.
+    - We are only visualizing one predictor at a time.
+    - We will need to use other tools to assess linearity in multiple regression.
+    
+## How Wrong is the Model?
+
+- To examine linearity in multiple regression, we will perform a posterior predictive check.
+
+- If the combined model assumptions are reasonable, then our posterior model should be able to simulate ridership data that's similar to the original 500 rides observations. 
+
+<center><img src = "images/W09_L2_a.png"></center>
+
+- For each of the 20,000 posterior plausible parameter sets, $\{\beta_0, \beta_1, \sigma\}$, we can predict ridership data from the observed temperature data. 
+    - This gives us 20,000 unique datasets of predicted ridership, each with $n=500$.
+    
+## How Wrong is the Model?
+
+- Recall our analysis from last lecture,
+
+```{r}
+bike_model <- stan_glm(rides ~ temp_feel, 
+                       data = bikes, 
+                       family = gaussian,
+                       prior_intercept = normal(5000, 1000), 
+                       prior = normal(100, 40), 
+                       prior_aux = exponential(0.0008), # sigma
+                       chains = 4, iter = 5000*2, seed = 84735) 
+```
+
+## How Wrong is the Model?
+
+- Recall our analysis from last lecture,
+
+```{r}
+tidy(bike_model, conf.int = TRUE) %>% select(-std.error)
+```
+
+- This gives the model,
+
+$$\hat{y} = -2195.3 + 82.2x \ \ \ \to \ \ \ \hat{\text{rides}} = -2195.3 + 82.2\text{temp}$$
+
+## How Wrong is the Model?
+
+- How do we perform the posterior predictive check?
+
+- The `pp_check()` function plots a number of the corresponding simulated datasets.
+
+```{r}
+#| fig-align: 'center'
+pp_check(bike_model, nreps=50, seed = 84735) + xlab("Number of Rides") + theme_bw()
+```
+    
+## How Accurate are Posterior Predictive Models?
+
+- Although we are interested in predicting the future, we can begin by evaluating how well it predicts the data that was used to build the model. 
+
+- We can use the `posterior_predict()` function to generate posterior predictive summaries to either our data or new data.
+
+```{r}
+predictions <- posterior_predict(bike_model, newdata=bikes, seed = 84735)
+dim(predictions)
+```
+
+- We have 20,000 posterior predictive datasets, each with 500 predicted ride counts.
+
+## How Accurate are Posterior Predictive Models?
+
+- We can also use the `ppc_intervals()` function to visualize the posterior predictive intervals for each observation.
+
+```{r}
+#| fig-align: 'center'
+ppc_intervals(bikes$rides, yrep = predictions, x = bikes$temp_feel, 
+              prob = 0.5, prob_outer = 0.95) + theme_bw()
+```
+
+## How Accurate are Posterior Predictive Models?
+
+- Let $Y_1, Y_2, ..., Y_n$ denote $n$ observed outcomes. Each $Y_i$ has a corresponding posterior predictive model with mean $Y_i'$ and standard deviation $\text{sd}_i$
+
+- Median Absolute Error (MAE): the typical difference between the observed value and posterior predictive mean.
+
+$$\text{MAE} = \text{median} | Y_i - Y_i'|$$
+
+- Scaled Median Absolute Error (MAE scaled): the typical difference between the observed value and posterior predictive mean.
+
+$$\text{MAE scaled} = \text{median} \frac{| Y_i - Y_i'|}{\text{sd}_i}$$
+
+## How Accurate are Posterior Predictive Models?
+
+- Let $Y_1, Y_2, ..., Y_n$ denote $n$ observed outcomes. Each $Y_i$ has a corresponding posterior predictive model with mean $Y_i'$ and standard deviation $\text{sd}_i$
+
+- Within 50: Proportion of observed values that fall within their 50% posterior prediction interval.
+
+- Within 95: Proportion of observed values that fall within their 95% posterior prediction interval.
+
+- We get these four values out of the `prediction_summary()` function,
+
+```{r}
+set.seed(84735)
+prediction_summary(bike_model, data = bikes)
+```
+
+## How Accurate are Posterior Predictive Models?
+
+- Let's now interpret these values.
+
+```{r}
+set.seed(84735)
+prediction_summary(bike_model, data = bikes)
+```
+
+- The MAE of 989.7 means that the typical difference between the observed ride count and the posterior predictive mean is about 990 rides.
+    - The scaled MAE of 0.77 means that the typical difference between the observed ride count and the posterior predictive mean is about 0.77 standard deviations.
+    
+- Only 43.8% of test observations fall within their respective 50% prediction interval, while 95.8% fall within their respective 95% prediction interval.
+
+## How Accurate are Posterior Predictive Models?
+
+- Looking at these side by side,
+
+```{r}
+#| fig-align: 'center'
+#| echo: false
+set.seed(84735)
+prediction_summary(bike_model, data = bikes)
+ppc_intervals(bikes$rides, yrep = predictions, x = bikes$temp_feel, 
+              prob = 0.5, prob_outer = 0.95) + theme_bw()
+```
+
+## How Accurate are Posterior Predictive Models?
+
+- What is our final conclusion? Does our Bayesian model produce accurate predictions?
+
+- Unfortunately, the answer is subjective and dependent on context.
+
+    - Is an MAE of 990 rides acceptable for the business?
+    - Is having only 43.8% of observations within the 50% prediction interval acceptable?
+    
+- Per usual, we are just the statisticians. The business must decide what is acceptable.    
+
+## How Accurate are Posterior Predictive Models?
+
+- How can we improve the model's posterior predictive accuracy?
+
+    - Add additional predictors or terms (e.g., interactions) to the model.
+    - Consider different distributions for the outcome variable.
+        - e.g., Poisson, negative binomial, binomial, etc.  
+    - Collect more data.
+        - This is always the cheeky answer.
+        
+## Practice / Homework
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 10.3
+    - 10.5
+    - 10.20
+    - 10.21
+        
+        

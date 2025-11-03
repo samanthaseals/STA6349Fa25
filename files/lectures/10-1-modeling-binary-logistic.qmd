@@ -1,0 +1,390 @@
+---
+title: "Logistic Regression"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+## Introduction
+
+- Last week, we focused on linear regression appropriate for continuous outcomes that are approximately normally distributed.
+
+$$
+\hat{y}_i = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+- Interpretation of $\hat{\beta}_0$ ($y$-intercept): The expected value of $y$ when all predictors are equal to zero.
+
+- Interpretation of $\hat{\beta}_i$ (slopes): The expected change in $y$ for a one-unit increase in $x_i$, holding all other predictors constant.
+
+## Introduction
+
+- Today we will cover binary logistic regression.
+
+- Categorical data: Logistic
+
+$$
+\ln\left(\frac{\hat{\pi}}{1-\hat{\pi}}\right) = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+- Count data: Poisson/negative binomial
+
+$$
+\ln(\hat{y}) = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+## Introduction
+
+- Without going into statistical theory, the left hand side of the equation is affected by the model's link function.
+    - Normal: Identity link 
+        - We are modeling $y$ directly
+    - Logistic: Logit link 
+        - We are modeling the logit of $\pi$
+    - Poisson/Negative Binomial: Log link 
+        - We are modeling the log of $y$
+        
+## Introduction
+
+- The left hand side *dictates* how we provide interpretations.
+    - If we are not modeling $y$ directly, we need to transform back to the original scale for interpretation purposes.
+
+- There are other link functions that can be used in generalized linear models, as long as the model converges.
+    - When done, it is to transform the left hand side to be more interpretable.
+    
+- Remember that if we have $\ln()$ on the left hand side, we can exponentiate to get back to the original scale.
+    - This means that our interpretations will be in terms of *multiplicative* changes rather than *additive* changes.
+    - For *each* increase in $x$, we will *multiply* the left hand side by some factor rather than *add* some amount to it.
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+library(rstanarm)
+library(broom.mixed)
+
+set.seed(1967)
+
+characters <- c("Mickey", "Minnie", "Donald", "Goofy")
+
+mickey <- tibble(
+  character = sample(characters, size = 150, replace = TRUE),
+  stealth_score = rnorm(150, mean = 6, sd = 2) |> pmin(10) |> pmax(0)
+)
+
+b0              <- -0.5   # Mickey baseline intercept
+b_minnie        <-  1.0   # Minnie is organized
+b_donald        <- -0.8   # Donald is high energy chaos
+b_goofy         <- -0.3   # Goofy means well
+b_stealth       <-  0.4   # stealthier missions tend to work better
+
+b_int_minnie    <-  0.4   # Minnie + stealth = unstoppable
+b_int_donald    <-  0.1   # Donald kinda ignores the plan
+b_int_goofy     <- -0.2   # Goofy trips over the bush even if stealthy
+
+mickey <- mickey |>
+  mutate(
+    is_minnie = if_else(character == "Minnie", 1, 0),
+    is_donald = if_else(character == "Donald", 1, 0),
+    is_goofy  = if_else(character == "Goofy",  1, 0),
+    eta = b0 +
+      b_minnie * is_minnie +
+      b_donald * is_donald +
+      b_goofy  * is_goofy  +
+      b_stealth * stealth_score +
+      b_int_minnie * is_minnie * stealth_score +
+      b_int_donald * is_donald * stealth_score +
+      b_int_goofy  * is_goofy  * stealth_score,
+    p_success = 1 / (1 + exp(-eta)),
+    mission_success = rbinom(n = 150, size = 1, prob = p_success)
+  ) |>
+  select(character, stealth_score, mission_success) |>
+  mutate(character = relevel(factor(character), ref = "Mickey"))
+```
+
+## Example 
+
+- Mickey Mouse and his friends have been organizing a series of rescue missions around the clubhouse. Each mission is led by one of four possible leaders (Mickey, Minnie, Donald, or Goofy) and the goal is to determine which factors make a mission most likely to succeed.
+
+- For each mission, the team records:
+    - mission_success: whether the rescue mission succeeded (1) or failed (0),
+    - character: the leader of the mission (Mickey, Minnie, Donald, or Goofy), and
+    - stealth_score: a numerical measure (0–10) of how quietly and carefully the mission was executed; higher values indicate more stealthy, well-coordinated missions.
+
+- Let's now set up a logistic regression to predict mission success as a function of who led the mission, the stealth score, and the interaction between the two. In R, our model will be
+
+$$
+\text{mission\_success} \sim \text{character} + \text{stealth\_score} + \text{character}:\text{stealth\_score}
+$$
+
+## Example 
+
+- Running the model,
+
+```{r}
+mickey_model <- stan_glm(mission_success ~ character + stealth_score + character:stealth_score,
+                         data = mickey, 
+                         family = binomial,
+                         prior_intercept = normal(0, 1, autoscale = TRUE),
+                         prior = normal(0, 1, autoscale = TRUE),
+                         chains = 4, iter = 5000*2, seed = 8716,
+                         prior_PD = FALSE)
+```
+
+## Example
+
+- Examining the results,
+
+```{r}
+tidy(mickey_model, conf.int = TRUE)
+```
+
+## Example
+
+- This results in the model,
+
+$$
+\begin{align*}
+\ln\left(\frac{\hat{\pi}}{1-\hat{\pi}}\right) =& \  -0.193  \\
+& \ -1.005 \text{ Donald} + 0.228 \text{ Goofy} + 1.917 \text{ Minnie} + 0.296 \text{ stealth} \  \\
+& \ + 0.185 \text{ Donald} \times \text{stealth} -0.198 \text{ Goofy}\times \text{stealth} \\
+& \ \ \ \ \ \ +  0.403 \text{ Minnie} \times \text{stealth} 
+\end{align*}
+$$
+
+## Example
+
+- Interpreting the coefficients:
+    - Intercept ($\hat{\beta}_0$): The log-odds of mission success when Mickey leads (reference category) and the stealth score is 0.
+    - Character coefficients ($\hat{\beta}_1$, $\hat{\beta}_2$, $\hat{\beta}_3$): The change in log-odds of mission success when Minnie, Donald, or Goofy lead, respectively, compared to Mickey, holding stealth score constant.
+    - Stealth score coefficient ($\hat{\beta}_4$): The change in log-odds of mission success for a one-unit increase in stealth score when Mickey leads.
+    - Interaction coefficients ($\hat{\beta}_5$, $\hat{\beta}_6$, $\hat{\beta}_7$): The additional change in log-odds of mission success for a one-unit increase in stealth score when Minnie, Donald, or Goofy lead, respectively, compared to Mickey.
+    
+## Example
+
+- What if we want to separate into individual models for each friend?
+
+![](images/model.png){width=90% fig-align="center"}
+
+## Example
+
+- Donald's model:
+
+![](images/model-donald.png){width=90% fig-align="center"}
+
+## Example
+
+- Goofy's model:
+
+![](images/model-goofy.png){width=90% fig-align="center"}
+
+## Example
+
+- Minnie's model:
+
+![](images/model-minnie.png){width=90% fig-align="center"}
+
+## Example
+
+- Mickey's model:
+
+![](images/model-mickey.png){width=90% fig-align="center"}
+
+## Odds Ratios
+
+- Recall that we do not want to interpret in terms of the log odds (i.e., in terms of)
+
+$$
+\ln\left(\frac{\hat{\pi}}{1-\hat{\pi}}\right)
+$$
+
+- Instead, we want to interpret in terms of the odds themselves (i.e., in terms of)
+
+$$
+\frac{\hat{\pi}}{1-\hat{\pi}}
+$$
+
+## Odds Ratios
+
+- To convert from log-odds to odds, we exponentiate the coefficients.
+
+$$
+\text{odds ratio}_i = \exp\{ \hat{\beta}_i \}
+$$
+
+- Note (1), if we are reporting odds ratios rather than $\hat{\beta}_i$, then:
+    - An odds ratio of 1 $\to$ no effect.
+    - An odds ratio greater than 1 $\to$ increase in odds.
+    - An odds ratio less than 1 $\to$ decrease in odds.
+
+- Note (2), if we are reporting odds ratios rather than $\hat{\beta}_i$, then we also want to report the intervals for the odds ratios and not the intervals for $\hat{\beta}_i$.
+
+## Example
+
+- We can request OR and their corresponding CI this out of `tidy()`,
+
+```{r}
+tidy(mickey_model, conf.int = TRUE, exponentiate = TRUE)
+```
+
+## Odds Ratios 
+
+- But... we have an interaction in our model?
+
+- We can take the same approach as finding the individual slopes! 
+    - Take the bounds and add/subtract as necessary.
+
+- Remember that we need to add on the original scale, not the converted odds ratios.
+
+## Example
+
+- Let's look at our model results, but only look at the CI results for stealth score and the interactions.
+
+```{r}
+tidy(mickey_model, conf.int = TRUE) %>% 
+  select(term, conf.low, conf.high) %>%
+  filter(str_detect(term, "stealth")) 
+```
+
+## Example
+
+- For Mickey,
+    - LB: .000111
+    - UB: 0.6076
+- For Donald, 
+    - LB: .000111 - 0.2135 = -0.2134
+    - UB: 0.6076 + 0.5965 = 1.2041
+- For Goofy,
+    - LB: .000111 - 0.5299 = -0.5298
+    - UB: 0.6076 + 0.1372 = 0.7448
+- For Minnie,
+    - LB: .000111 - 0.2653 = -0.2652
+    - UB: 0.6076 + 0.5519 = 1.1595
+    
+## Example
+
+- Comparing side by side with CI for OR,
+
+| Friend | CI for $\beta$     | CI for OR    |
+|--------|--------------------|--------------|
+| Mickey | (0.000111, 0.6076) | (1.00, 1.84) |
+| Donald | (-0.2134, 1.204)   | (0.81, 3.33) |
+| Goofy  | (-0.5298, 0.7448)  | (0.59, 2.11) |
+| Minnie | (-0.2652, 1.1595)  | (0.77, 3.19) |
+
+<!--
+# the code below is how I generated the table above
+
+(ci <- tibble(character = c("Mickey", "Donald", "Goofy", "Minnie"),
+             lower = c(0.000111, -0.2134, -0.5298, -0.2652),
+             upper = c(0.6076, 1.2041, 0.7448, 1.1595),
+             exp_lower = exp(lower),
+             exp_upper = exp(upper)))
+-->
+
+## Example
+
+- How would I report the results in a table?
+
+| Friend | OR (95% CI for OR) |
+|--------|--------|
+| Mickey | 1.23 (1.00, 1.84) |
+| Donald | 1.62 (0.81, 3.33) |
+| Goofy  | 1.11 (0.59, 2.11) |
+| Minnie | 1.53 (0.77, 3.19) |
+
+- For all characters, as stealth score increases, the odds of mission success increase.
+- The strength of this effect varies by character, but the 95% CIs for all characters include 1, indicating a null effect.
+
+
+## Visualizing the Model
+
+- We can put together a data visualization to help us understand what's going on in our model.
+
+- In this example, we will have strength on the $x$-axis and define lines by the friend.
+    - i.e., I am graphing the individual models we saw earlier.
+    
+- First, we have to find predicted values,
+
+```{r}
+mickey <- mickey %>%
+  mutate(p_mickey = exp(-0.193 + 0.296*stealth_score) / (1+exp(-0.193 + 0.296*stealth_score)),
+         p_minnie = exp(1.724 + 0.426*stealth_score) / (1+exp(1.724 + 0.426*stealth_score)),
+         p_donald = exp(-1.198 + 0.481*stealth_score) / (1+exp(-1.198 + 0.481*stealth_score)),
+         p_goofy  = exp(0.035 + 0.101*stealth_score) / (1+exp(0.035 + 0.101*stealth_score)))
+```
+
+## Example
+
+- Then, we can graph using these predicted values
+
+```{r}
+#| eval: false
+mickey %>% ggplot(aes(x = stealth_score, y = mission_success)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "black")) +
+  geom_line(aes(y = p_minnie, color = "red")) +
+  geom_line(aes(y = p_donald, color = "blue")) +
+  geom_line(aes(y = p_goofy, color = "green")) +
+  labs(x = "Stealth Score",
+       y = "Probability of Mission Success",
+       color = "Leader") +
+  scale_color_manual(labels = c("Mickey", "Minnie", "Donald", "Goofy"),
+                     values = c("black", "red", "blue", "green")) +
+  theme_bw()
+```
+
+## Example
+
+```{r}
+#| echo: false
+#| fig-align: 'center'
+#| fig-width: 8
+mickey %>% ggplot(aes(x = stealth_score, y = mission_success)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "black")) +
+  geom_line(aes(y = p_minnie, color = "red")) +
+  geom_line(aes(y = p_donald, color = "blue")) +
+  geom_line(aes(y = p_goofy, color = "green")) +
+  labs(x = "Stealth Score",
+       y = "Probability of Mission Success",
+       color = "Leader") +
+  scale_color_manual(labels = c("Mickey", "Minnie", "Donald", "Goofy"),
+                     values = c("black", "red", "blue", "green")) +
+  theme_bw()
+```
+    
+## Wrap Up
+
+- Binary logistic regression is used for binary outcomes (e.g., success/failure).
+
+- Recall we also have
+    - Ordinal logistic regression $\to$ for ordered categorical outcomes (e.g., low/medium/high).
+    - Multinomial logistic regression $\to$ for unordered categorical outcomes (e.g., red/blue/green).
+    
+- Wednesday: 
+    - Poisson and Negative Binomial regression for count data.
+    - How to "read" subject-matter articles to extract information for analysis.
+
+## Practice / Homework
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 13.6, 13.7
+    - 13.10, 13.11

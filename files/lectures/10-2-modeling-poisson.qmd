@@ -1,0 +1,422 @@
+---
+title: "Poisson and Negative Binomial Regressions"
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: true
+format: 
+  revealjs:
+    theme: default
+    css: mlp2.css
+    self-contained: true
+    slide-number: true
+    footer: "STA6349 - Applied Bayesian Analysis - Fall 2025"
+    width: 1600
+    height: 900
+    df-print: paged
+    html-math-method: katex
+    code-fold: false
+    code-tools: false
+    incremental: false
+editor: source
+---
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(bayesrules)
+library(bayesplot)
+library(rstanarm)
+library(broom.mixed)
+
+set.seed(2025)
+
+n <- 150
+characters <- c("Mickey", "Minnie", "Donald", "Goofy")
+
+friends <- tibble(
+  character = sample(characters, size = n, replace = TRUE),
+  stealth_score = rnorm(n, mean = 6, sd = 2) |> pmin(10) |> pmax(0)
+)
+a0              <- 1.2    # baseline log-rate for Mickey at stealth = 0
+a_minnie        <- -0.5   # Minnie is organized -> fewer alerts
+a_donald        <-  0.4   # Donald is loud -> more alerts
+a_goofy         <-  0.2   # Goofy is clumsy -> slightly more alerts
+a_stealth       <- -0.15  # higher stealth means fewer alerts overall
+a_int_minnie    <- -0.10  # Minnie uses stealth extremely well
+a_int_donald    <- -0.05  # Donald tries to be stealthy but still quacks
+a_int_goofy     <- -0.02  # Goofy attempts stealth but trips anyway
+
+friends <- friends |>
+  mutate(
+    is_minnie = if_else(character == "Minnie", 1, 0),
+    is_donald = if_else(character == "Donald", 1, 0),
+    is_goofy  = if_else(character == "Goofy",  1, 0),
+    
+    linpred = a0 +
+      a_minnie * is_minnie +
+      a_donald * is_donald +
+      a_goofy  * is_goofy +
+      a_stealth * stealth_score +
+      a_int_minnie * is_minnie * stealth_score +
+      a_int_donald * is_donald * stealth_score +
+      a_int_goofy  * is_goofy  * stealth_score,
+    
+    lambda = exp(linpred),  # expected number of alerts
+    
+    alerts_triggered = rpois(n = n, lambda = lambda)
+  ) |>
+  select(character, stealth_score, alerts_triggered) %>%
+  mutate(character = relevel(as.factor(character), ref = "Mickey"))
+
+
+set.seed(1857)
+n <- 150
+characters <- c("Mickey", "Minnie", "Donald", "Goofy")
+
+friends2 <- tibble(
+  character = sample(characters, size = n, replace = TRUE),
+  stealth_score = rnorm(n, mean = 6, sd = 2) |> pmin(10) |> pmax(0)
+)
+
+# Baseline log-rate parameters (similar to Poisson model)
+b0 <- 1.2
+b_minnie <- -0.5
+b_donald <-  0.4
+b_goofy  <-  0.2
+b_stealth <- -0.15
+b_int_minnie <- -0.10
+b_int_donald <- -0.05
+b_int_goofy  <- -0.02
+
+# same linear predictor
+friends2 <- friends2 |>
+  mutate(
+    is_minnie = if_else(character == "Minnie", 1, 0),
+    is_donald = if_else(character == "Donald", 1, 0),
+    is_goofy  = if_else(character == "Goofy",  1, 0),
+    linpred = b0 +
+      b_minnie * is_minnie +
+      b_donald * is_donald +
+      b_goofy  * is_goofy +
+      b_stealth * stealth_score +
+      b_int_minnie * is_minnie * stealth_score +
+      b_int_donald * is_donald * stealth_score +
+      b_int_goofy  * is_goofy  * stealth_score,
+    lambda = exp(linpred)
+  )
+
+# Now make it overdispersed:
+# We'll draw each lambda from a Gamma distribution before generating Poisson counts.
+# This creates a Negative Binomial structure (Poisson-Gamma mixture).
+# We'll make Donald have extra variance (smaller 'theta' -> more overdispersion).
+
+friends2 <- friends2 |>
+  rowwise() |>
+  mutate(
+    theta = if_else(character == "Donald", 1, 3),  # smaller theta = more chaos
+    # Randomize individual-level rate:
+    lambda_star = rgamma(1, shape = theta, rate = theta / lambda),
+    alerts_triggered = rpois(1, lambda_star)
+  ) |>
+  ungroup() |>
+  select(character, stealth_score, alerts_triggered) |> 
+  mutate(character = relevel(as.factor(character), ref = "Mickey"))
+
+```
+
+
+## Introduction
+
+- Continuous data: Linear
+
+$$
+\hat{y_i} = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+- Categorical data: Logistic
+
+$$
+\ln\left(\frac{\hat{\pi_i}}{1-\hat{\pi_i}}\right) = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+- Count data: Poisson/negative binomial
+
+$$
+\ln(\hat{y}_i) = \hat{\beta}_0 + \hat{\beta}_1 x_{i1} + \hat{\beta}_2 x_{i2} + ... + \hat{\beta}_k x_{ik}
+$$
+
+## Poisson Regression
+
+- Generic code for Poisson regression:
+
+```{r}
+#| eval: false
+posterior_model <- stan_glm(y ~ x1 + x2 + ... + xk, 
+                            data = dataset_name, 
+                            family = poisson,
+                            prior_intercept = normal(0, 1, autoscale = TRUE),
+                            prior = normal(0, 1, autoscale = TRUE), 
+                            chains = 4, iter = 5000*2, seed = 84735, 
+                            prior_PD = FALSE)
+```
+
+## Example: Set Up
+
+- After a few successful rescue missions, Mickey Mouse and his friends noticed something strange: every time they set out on a new mission, the number of alert beacons that went off around the clubhouse varied. Sometimes the team moved silently, but other times the entire operation echoed with crashes, clanks, and Donald’s famous quacking. To understand what's going on, the team started tracking three pieces of information for each mission:
+
+  - alerts_triggered: the number of alert beacons that went off during the mission (possible values: 0, 1, 2, 3, ...).
+  - character: which character led the mission (Mickey, Minnie, Donald, or Goofy).
+  - stealth_score: how carefully the team tried to move on a scale from 0 to 10, where higher values mean a quieter, more careful mission.
+
+## Example: Poisson
+
+```{r}
+poisson_posterior <- stan_glm(alerts_triggered ~ character + stealth_score, 
+                            data = friends, 
+                            family = poisson,
+                            prior_intercept = normal(0, 1, autoscale = TRUE),
+                            prior = normal(0, 1, autoscale = TRUE), 
+                            chains = 4, iter = 5000*2, seed = 84735, 
+                            prior_PD = FALSE)
+```
+
+## Example: Poisson
+
+- Examining the results,
+
+```{r}
+tidy(poisson_posterior, conf.int = TRUE, exponentiate = FALSE)
+```
+
+$$
+\ln(\hat{y}) = 1.48 + 0.51 \text{ Donald} + 0.26 \text{ Goofy} - 0.58 \text{ Minnie} - 0.24 \text{ stealth}
+$$
+
+## Example: Poisson
+
+- We are interested in the multiplicative effect on the expected count, so we exponentiate the coefficients and credible intervals:
+
+```{r}
+tidy(poisson_posterior, conf.int = TRUE, exponentiate = TRUE)
+```
+
+## Example: Poisson
+
+- How would I report the results in a table?
+
+| Predictor | IRR (95% CI) |
+|-----------|:------------:|
+| Donald    | 1.67 (1.21, 2.30) |
+| Goofy     | 1.30 (0.95, 1.80) |
+| Minnie    | 0.56 (0.36, 0.85) |
+| Stealth   | 0.79 (0.75, 0.84) |
+
+## Example: Poisson
+
+- Incident Rate Ratios (IRR): multiplicative effect on the expected count for a one unit increase in the predictor, holding other predictors constant.
+
+- As compared to Mickey,
+  - Donald is expected to trigger 1.67 times as many alerts (67% more).
+  - Goofy is expected to trigger 1.30 times as many alerts (30% more).
+  - Minnie is expected to trigger 0.56 times as many alerts (44% fewer).
+  
+- As stealth score increases, the expected number of alerts triggered decreases.
+    - For a one-unit increase in stealth-score, the expected number of alerts triggered decreases by 21%.
+
+## Example: Poisson
+
+- To visualize our model, we first find predicted values,
+
+```{r}
+friends <- friends %>%
+  mutate(p_mickey = exp(1.48-0.235*stealth_score),
+         p_donald = exp(1.48+0.51-0.235*stealth_score),
+         p_goofy  = exp(1.48+0.26-0.235*stealth_score),
+         p_minnie = exp(1.48-0.58-0.235*stealth_score))
+```
+
+- Then, construct the `ggplot`,
+
+```{r}
+#| eval: false
+friends %>% ggplot(aes(x = stealth_score, y = alerts_triggered)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "Mickey")) +
+  geom_line(aes(y = p_donald, color = "Donald")) +
+  geom_line(aes(y = p_goofy,  color = "Goofy")) +
+  geom_line(aes(y = p_minnie, color = "Minnie")) +
+  labs(x = "Stealth Score",
+       y = "Expected Number of Alerts Triggered",
+       color = "Character") +
+  theme_bw()
+```
+
+## Example: Poisson
+
+```{r}
+#| echo: false
+#| fig-align: 'center'
+friends %>% ggplot(aes(x = stealth_score, y = alerts_triggered)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "Mickey")) +
+  geom_line(aes(y = p_donald, color = "Donald")) +
+  geom_line(aes(y = p_goofy,  color = "Goofy")) +
+  geom_line(aes(y = p_minnie, color = "Minnie")) +
+  labs(x = "Stealth Score",
+       y = "Expected Number of Alerts Triggered",
+       color = "Character") +
+  theme_bw()
+```
+
+
+
+
+## Negative Binomial Regression
+
+- Generic code for negative binomial regression:
+
+```{r}
+#| eval: false
+posterior_model <- stan_glm(y ~ x1 + x2 + ... + xk, 
+                            data = dataset_name, 
+                            family = neg_binomial_2,
+                            prior_intercept = normal(0, 1, autoscale = TRUE),
+                            prior = normal(0, 1, autoscale = TRUE), 
+                            chains = 4, iter = 5000*2, seed = 84735, 
+                            prior_PD = FALSE)
+```
+
+## Example: Set Up
+
+- After weeks of studying the clubhouse rescue missions, Mickey and friends have noticed a problem: some missions are wildly unpredictable. When Donald Duck takes charge, the number of alert beacons that go off during a mission varies dramatically. On some days, his missions are surprisingly quiet. On others, Donald's shouting and tripping set off nearly every beacon in the clubhouse!
+
+```{r}
+friends2 %>% summarize(mean(alerts_triggered),
+                       var(alerts_triggered))
+```
+
+- We can see that the mean and variance do not meet the assumption for the Poisson distribution.
+
+## Example: Negative Binomial
+
+```{r}
+negbin_posterior <- stan_glm(alerts_triggered ~ character + stealth_score, 
+                             data = friends2, 
+                             family = neg_binomial_2,
+                             prior_intercept = normal(0, 1, autoscale = TRUE),
+                             prior = normal(0, 1, autoscale = TRUE), 
+                             chains = 4, iter = 5000*2, seed = 84735, 
+                             prior_PD = FALSE)
+```
+
+## Example: Negative Binomial
+
+```{r}
+tidy(negbin_posterior, conf.int = TRUE, exponentiate = FALSE)
+```
+
+$$
+\ln(\hat{y}) = 1.39 - 0.10 \text{ Donald} + 0.08 \text{ Goofy} - 1.20 \text{ Minnie} - 0.15 \text{ stealth}
+$$
+
+## Example: Negative Binomial
+
+- We are interested in the multiplicative effect on the expected count, so we exponentiate the coefficients and credible intervals:
+
+```{r}
+tidy(negbin_posterior, conf.int = TRUE, exponentiate = TRUE)
+```
+
+## Example: Negative Binomial
+
+- How would I report the results in a table?
+
+| Predictor | IRR (95% CI) |
+|-----------|:------------:|
+| Donald    | 0.91 (0.60, 1.37) |
+| Goofy     | 1.08 (0.71, 1.63) |
+| Minnie    | 0.30 (0.18, 0.48) |
+| Stealth   | 0.86 (0.80, 0.93) |
+
+## Example: Negative Binomial
+
+- Incident Rate Ratios (IRR): multiplicative effect on the expected count for a one unit increase in the predictor, holding other predictors constant.
+
+- As compared to Mickey,
+  - Donald is expected to trigger 0.91 times as many alerts (9% fewer).
+  - Goofy is expected to trigger 1.08 times as many alerts (8% increase).
+  - Minnie is expected to trigger 0.30 times as many alerts (70% fewer).
+  
+- As stealth score increases, the expected number of alerts triggered decreases.
+    - For a one-unit increase in stealth-score, the expected number of alerts triggered decreases by 14%.
+
+## Example: Negative Binomial
+
+- To visualize our model, we first find predicted values,
+
+\ln(\hat{y}) = 1.39 - 0.10 \text{ Donald} + 0.08 \text{ Goofy} - 1.20 \text{ Minnie} - 0.15 \text{ stealth}
+```{r}
+friends2 <- friends2 %>%
+  mutate(p_mickey = exp(1.39 - 0.15*stealth_score),
+         p_donald = exp(1.39 - 0.10 -0.15*stealth_score),
+         p_goofy  = exp(1.39 + 0.08 -0.15*stealth_score),
+         p_minnie = exp(1.39 - 1.20 -0.15*stealth_score))
+```
+
+- Then, construct the `ggplot`,
+
+```{r}
+#| eval: false
+friends2 %>% ggplot(aes(x = stealth_score, y = alerts_triggered)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "Mickey")) +
+  geom_line(aes(y = p_donald, color = "Donald")) +
+  geom_line(aes(y = p_goofy,  color = "Goofy")) +
+  geom_line(aes(y = p_minnie, color = "Minnie")) +
+  labs(x = "Stealth Score",
+       y = "Expected Number of Alerts Triggered",
+       color = "Character") +
+  theme_bw()
+```
+
+## Example: Negative Binomial
+
+```{r}
+#| echo: false
+#| fig-align: 'center'
+friends2 %>% ggplot(aes(x = stealth_score, y = alerts_triggered)) +
+  geom_point(size = 3) +
+  geom_line(aes(y = p_mickey, color = "Mickey")) +
+  geom_line(aes(y = p_donald, color = "Donald")) +
+  geom_line(aes(y = p_goofy,  color = "Goofy")) +
+  geom_line(aes(y = p_minnie, color = "Minnie")) +
+  labs(x = "Stealth Score",
+       y = "Expected Number of Alerts Triggered",
+       color = "Character") +
+  theme_bw()
+```
+
+## Wrap Up
+
+- Poisson and negative binomial regressions are used to model count data.
+    - Poisson: mean = variance.
+    - Negative binomial: variance > mean (overdispersion).
+
+- Coefficients are interpreted as log-incident rate ratios (log-IRR).
+    - Exponentiating coefficients gives incident rate ratios (IRR).
+    
+- Rest of lecture: 
+    - How to "read" subject-matter articles to extract information for analysis.
+        - Worksheet due Tuesday next week.
+
+- Next week:
+    - Monday: Assignment 3 (Regression Analysis)
+    - Wednesday: Meet with EES collaborator (no formal class). Discuss methodology and their research objective(s). 
+
+## Practice / Homework
+
+- From the [Bayes Rules!](https://www.bayesrulesbook.com/) textbook:
+
+    - 12.5, 12.6, 12.7, 12.8, 12.9
